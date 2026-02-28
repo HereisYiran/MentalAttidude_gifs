@@ -1,6 +1,7 @@
 {
-  "pythonPath": ".venv/bin/python",
+  "venvPath": ".",
+  "venv": ".venv",
   "extraPaths": [
-    "/Users/yiranjiang/Desktop/gridworld_gifs"
+    "."
   ]
 }

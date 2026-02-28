@@ -19,13 +19,14 @@ class OuterWall(WorldObj):
     def see_behind(self):
         return False
 
-    def render(self, img):
+    def render(self, r: np.ndarray) -> np.ndarray:
         # Dark brown stone with mortar lines
-        fill_coords(img, point_in_rect(0, 1, 0, 1), (65, 42, 24))
-        fill_coords(img, point_in_rect(0.04, 0.96, 0.04, 0.96), (80, 50, 30))
+        fill_coords(r, point_in_rect(0, 1, 0, 1), (65, 42, 24))
+        fill_coords(r, point_in_rect(0.04, 0.96, 0.04, 0.96), (80, 50, 30))
         # Subtle mortar lines
-        fill_coords(img, point_in_rect(0, 1, 0.48, 0.52), (55, 38, 20))
-        fill_coords(img, point_in_rect(0.48, 0.52, 0, 1), (55, 38, 20))
+        fill_coords(r, point_in_rect(0, 1, 0.48, 0.52), (55, 38, 20))
+        fill_coords(r, point_in_rect(0.48, 0.52, 0, 1), (55, 38, 20))
+        return r
 
 
 class InnerWall(WorldObj):
@@ -35,10 +36,11 @@ class InnerWall(WorldObj):
     def see_behind(self):
         return False
 
-    def render(self, img):
+    def render(self, r: np.ndarray) -> np.ndarray:
         # Warm wooden plank look
-        fill_coords(img, point_in_rect(0, 1, 0, 1), (140, 100, 60))
-        fill_coords(img, point_in_rect(0.06, 0.94, 0.06, 0.94), (160, 115, 70))
+        fill_coords(r, point_in_rect(0, 1, 0, 1), (140, 100, 60))
+        fill_coords(r, point_in_rect(0.06, 0.94, 0.06, 0.94), (160, 115, 70))
         # Horizontal wood grain lines
-        fill_coords(img, point_in_rect(0.06, 0.94, 0.30, 0.33), (130, 90, 50))
-        fill_coords(img, point_in_rect(0.06, 0.94, 0.63, 0.66), (130, 90, 50))
+        fill_coords(r, point_in_rect(0.06, 0.94, 0.30, 0.33), (130, 90, 50))
+        fill_coords(r, point_in_rect(0.06, 0.94, 0.63, 0.66), (130, 90, 50))
+        return r

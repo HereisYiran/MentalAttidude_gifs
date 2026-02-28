@@ -1,4 +1,4 @@
-# Hope_Scenario 5
+# Hope_Scenario 6
 
 # file path
 import sys
@@ -12,7 +12,7 @@ from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Floor
 from minigrid.minigrid_env import MiniGridEnv
 
-from render.objects import Bush, RedBerryBush, BlueBerryBush
+from render.objects import Bush, OrangeBerryBush, RedBerryBush, BlueBerryBush
 from render.walls import OuterWall, InnerWall
 
 
@@ -81,12 +81,12 @@ def make_scenario5_gif(env, actions, output_path="scenario5_hope.gif", fps=1.3):
     env.close()
     imageio.mimsave(output_path, frames, fps=fps, loop=0)
 
-class Scenario5Env(MiniGridEnv):
+class Scenario6Env(MiniGridEnv):
 
     def __init__(self, max_steps=100, **kwargs):
-        mission_space = MissionSpace(mission_func=lambda: "hope scenario 5")
+        mission_space = MissionSpace(mission_func=lambda: "hope scenario 6")
         super().__init__(
-            width=10,
+            width=13,
             height=13,
             max_steps=max_steps,
             see_through_walls=False,
@@ -143,12 +143,24 @@ class Scenario5Env(MiniGridEnv):
             self.grid.set(width - 1, y, OuterWall())
 
         # Inner wall
-        for col in range(1, 6):
+        for col in [1, 2, 3, 4, 5, 6]:
             self.grid.set(col, 4, InnerWall())
 
         # Inner wall
-        for col in range(5, 9):
-            self.grid.set(col, 8, InnerWall())
+        for col in [4]:
+            self.grid.set(col, 5, InnerWall())
+
+        # Inner wall
+        for col in [4]:
+            self.grid.set(col, 6, InnerWall())
+
+        # Inner wall
+        for col in [4]:
+            self.grid.set(col, 10, InnerWall())
+
+        # Inner wall
+        for col in range (4, 12):
+            self.grid.set(col, 11, InnerWall())
 
         # Forest floor
         for x in range(1, width - 1):
@@ -157,29 +169,27 @@ class Scenario5Env(MiniGridEnv):
                     self.grid.set(x, y, Floor("green"))
 
         # Bushes
-        self.grid.set(1, 6, BlueBerryBush())       
-        self.grid.set(8, 9, RedBerryBush())       
-        self.grid.set(8, 11, BlueBerryBush())         
+        self.grid.set(10, 2, RedBerryBush())       
+        self.grid.set(2, 6, OrangeBerryBush())       
+        self.grid.set(2, 10, RedBerryBush())         
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
-        self.mission = "hope scenario 5"
+        self.mission = "hope scenario 6"
 
 # GIF
 
 if __name__ == "__main__":
-    env = Scenario5Env(render_mode="rgb_array", tile_size=48)
+    env = Scenario6Env(render_mode="rgb_array", tile_size=48)
 
     L = env.actions.left
     R = env.actions.right
     F = env.actions.forward
 
     actions = [
-        *[F]*6,   
-        R, *[F]*4,        
-        R, *[F]*5, 
-        *backoff_actions(steps=1),
-        L, *[F]*4,          
-        L, *[F]*2, 
+        *[F]*8,
+        *backoff_actions(steps=1),   
+        R, *[F]*6,        
+        R, *[F]*3,
     ]
-    make_scenario5_gif(env, actions, output_path="scenario5_hope.gif", fps=1.3)
+    make_scenario5_gif(env, actions, output_path="scenario6_hope.gif", fps=1.3)

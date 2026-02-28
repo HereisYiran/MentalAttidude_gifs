@@ -1,4 +1,4 @@
-# Desire_Scenario 3
+# Desire_Scenario 4
 
 # file path
 import sys
@@ -15,21 +15,21 @@ from render.objects import RedBerryBush, BlueBerryBush, OrangeBerryBush
 from render.walls import OuterWall, InnerWall
 from render.render_gif import make_gif
 
-class Scenario3Env(MiniGridEnv):
+class Scenario4Env(MiniGridEnv):
 
     def __init__(self, max_steps=100, **kwargs):
-        mission_space = MissionSpace(mission_func=lambda: "desire scenario 3")
+        mission_space = MissionSpace(mission_func=lambda: "desire scenario 4")
         super().__init__(
-            width=10,
-            height=13,
+            width=11,
+            height=14,
             max_steps=max_steps,
             see_through_walls=False,
             agent_view_size=3,
             mission_space=mission_space,
             **kwargs,
         )
-        self.agent_start_pos = (8, 10)
-        self.agent_start_dir = 2  # facing left
+        self.agent_start_pos = (1, 2)
+        self.agent_start_dir = 0  # facing left
 
     def get_full_render(self, highlight, tile_size):
         # 2×3 wall-blocked view: use MiniGrid's built-in visibility
@@ -76,11 +76,11 @@ class Scenario3Env(MiniGridEnv):
             self.grid.set(width - 1, y, OuterWall())
 
         # Inner wall: row 4
-        for col in [1, 2, 3, 7, 8]:
+        for col in range(1, 7):
             self.grid.set(col, 4, InnerWall())
 
         # Inner wall: row 8
-        for col in range(4, 9):
+        for col in range(4, 10):
             self.grid.set(col, 8, InnerWall())
 
         # Forest floor
@@ -90,9 +90,9 @@ class Scenario3Env(MiniGridEnv):
                     self.grid.set(x, y, Floor("green"))
 
         # Bushes
-        self.grid.set(5, 1, OrangeBerryBush())  
-        self.grid.set(4, 1, BlueBerryBush())    
-        self.grid.set(6, 1, RedBerryBush())    
+        self.grid.set(8, 10, RedBerryBush())  
+        self.grid.set(8, 11, BlueBerryBush())    
+        self.grid.set(8, 12, OrangeBerryBush())    
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
@@ -101,19 +101,19 @@ class Scenario3Env(MiniGridEnv):
 # GIF
 
 if __name__ == "__main__":
-    env = Scenario3Env(render_mode="rgb_array", tile_size=48)
+    env = Scenario4Env(render_mode="rgb_array", tile_size=48)
 
     L = env.actions.left
     R = env.actions.right
     F = env.actions.forward
 
     actions = [
-        *[F]*6,           
+        *[F]*7,           
         R, *[F]*4,        
-        R, *[F]*3,       
-        L, *[F]*4,       
-        L, *[F]*1,          
-        R, *[F]*1,        
+        R, *[F]*6,       
+        L, *[F]*5,       
+        L, *[F]*5,          
+        *[F]*1      
     ]
-    make_gif(env, actions, output_path="scenario3_desire.gif", fps=1.3, tile_size=48)
+    make_gif(env, actions, output_path="scenario4_desire.gif", fps=1.3, tile_size=48)
     env.close()

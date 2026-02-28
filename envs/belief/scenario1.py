@@ -77,11 +77,11 @@ class Scenario1Env(MiniGridEnv):
             self.grid.set(0, y, OuterWall())
             self.grid.set(width - 1, y, OuterWall())
 
-        # Inner wall: row 5, columns 5-9
+        # Inner wall: row 5
         for col in range(5, 10):
             self.grid.set(col, 5, InnerWall())
         
-        # Inner wall: row 9, columns 1-5
+        # Inner wall: row 9
         for col in range(1, 6):
             self.grid.set(col, 9, InnerWall())
 
@@ -116,5 +116,5 @@ if __name__ == "__main__":
         R, *[F]*5,
         R, *[F]*3,      
     ]
-    make_gif(env, actions, output_path="scenario1_belief.gif", fps=1.2, tile_size=48)
+    make_gif(env, actions, output_path="scenario1_belief.gif", fps=1.3, tile_size=48)
     env.close()

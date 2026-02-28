@@ -1,4 +1,4 @@
-# Desire_Scenario 3
+# Belief_Scenario 2
 
 # file path
 import sys
@@ -11,28 +11,30 @@ from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Floor
 from minigrid.minigrid_env import MiniGridEnv
 
-from render.objects import RedBerryBush, BlueBerryBush, OrangeBerryBush
+from render.objects import EmptyBush, RedBerryBush
 from render.walls import OuterWall, InnerWall
 from render.render_gif import make_gif
 
-class Scenario3Env(MiniGridEnv):
+
+class Scenario2Env(MiniGridEnv):
 
     def __init__(self, max_steps=100, **kwargs):
-        mission_space = MissionSpace(mission_func=lambda: "desire scenario 3")
+        mission_space = MissionSpace(mission_func=lambda: "find the red berry bush")
         super().__init__(
-            width=10,
-            height=13,
+            width=11,
+            height=14,
             max_steps=max_steps,
             see_through_walls=False,
             agent_view_size=3,
             mission_space=mission_space,
             **kwargs,
         )
-        self.agent_start_pos = (8, 10)
-        self.agent_start_dir = 2  # facing left
+        self.agent_start_pos = (9, 2)
+        self.agent_start_dir = 2  # 0=right, 1=down, 2=left, 3=up
 
     def get_full_render(self, highlight, tile_size):
         # 2×3 wall-blocked view: use MiniGrid's built-in visibility
+        # (respects walls) but clip to 2 rows deep instead of 3.
         _, vis_mask = self.gen_obs_grid()
 
         f_vec = self.dir_vec
@@ -63,7 +65,7 @@ class Scenario3Env(MiniGridEnv):
             highlight_mask=highlight_mask if highlight else None,
         )
         return img
-
+    
     def _gen_grid(self, width, height):
         self.grid = Grid(width, height)
 
@@ -75,45 +77,44 @@ class Scenario3Env(MiniGridEnv):
             self.grid.set(0, y, OuterWall())
             self.grid.set(width - 1, y, OuterWall())
 
-        # Inner wall: row 4
-        for col in [1, 2, 3, 7, 8]:
-            self.grid.set(col, 4, InnerWall())
+        # Inner wall: row 5
+        for col in range(5, 10):
+            self.grid.set(col, 5, InnerWall())
+        
+        # Inner wall: row 9
+        for col in range(1, 6):
+            self.grid.set(col, 9, InnerWall())
 
-        # Inner wall: row 8
-        for col in range(4, 9):
-            self.grid.set(col, 8, InnerWall())
-
-        # Forest floor
+        # Forest
         for x in range(1, width - 1):
             for y in range(1, height - 1):
                 if self.grid.get(x, y) is None:
                     self.grid.set(x, y, Floor("green"))
-
+        
         # Bushes
-        self.grid.set(5, 1, OrangeBerryBush())  
-        self.grid.set(4, 1, BlueBerryBush())    
-        self.grid.set(6, 1, RedBerryBush())    
+        self.grid.set(1, 7, RedBerryBush())      
+        self.grid.set(9, 11, EmptyBush())    
+        self.grid.set(1, 12, EmptyBush())     
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
-        self.mission = "find the preferred berry bush"
+        self.mission = "find the red berry bush"
 
 # GIF
 
 if __name__ == "__main__":
-    env = Scenario3Env(render_mode="rgb_array", tile_size=48)
+    env = Scenario2Env(render_mode="rgb_array", tile_size=48)
 
-    L = env.actions.left
-    R = env.actions.right
-    F = env.actions.forward
+    L  = env.actions.left      # 0
+    R = env.actions.right     # 1
+    F   = env.actions.forward   # 2
 
     actions = [
-        *[F]*6,           
-        R, *[F]*4,        
-        R, *[F]*3,       
-        L, *[F]*4,       
-        L, *[F]*1,          
-        R, *[F]*1,        
+        *[F]*6,         
+        L, *[F]*5,       
+        L, *[F]*4,
+        R, *[F]*4,
+        R, *[F]*3,      
     ]
-    make_gif(env, actions, output_path="scenario3_desire.gif", fps=1.3, tile_size=48)
+    make_gif(env, actions, output_path="scenario2_belief.gif", fps=1.3, tile_size=48)
     env.close()

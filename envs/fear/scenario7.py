@@ -26,20 +26,6 @@ def _direct_backoff(env):
         env.agent_pos = (bx, by)
 
 
-def _move_to(x, y):
-    def _inner(env):
-        obj = env.grid.get(x, y)
-        if obj is None or obj.can_overlap():
-            old_x, old_y = int(env.agent_pos[0]), int(env.agent_pos[1])
-            env.agent_pos = (x, y)
-            dx, dy = x - old_x, y - old_y
-            if abs(dx) > abs(dy):
-                env.agent_dir = 0 if dx > 0 else 2
-            elif abs(dy) > 0:
-                env.agent_dir = 1 if dy > 0 else 3
-    return _inner
-
-
 def _wait(seconds):
     return ("wait", float(seconds))
 

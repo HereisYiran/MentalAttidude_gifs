@@ -12,27 +12,8 @@ from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Floor
 from minigrid.minigrid_env import MiniGridEnv
 
-from render.objects import Bush, RedBerryBush, BlueBerryBush
+from render.objects import EmptyBush, RedBerryBush, BlueBerryBush, OrangeBerryBush
 from render.walls import OuterWall, InnerWall
-
-
-LAYOUT = [
-    "WWWWWWWWWWWWW",
-    "W...........W",
-    "W.........B.W",
-    "W...........W",
-    "W...WWWWWWWWW",
-    "W....SSS....W",
-    "W....SBS....W",
-    "W....SSS....W",
-    "W...........W",
-    "W...........W",
-    "WWWWWW......W",
-    "W........SSSW",
-    "WG.......SBSW",
-    "W........SSSW",
-    "WWWWWWWWWWWWW",
-]
 
 
 def _direct_backoff(env):
@@ -87,7 +68,7 @@ def _get_highlighted_cells(env):
 def _check_berry_discovery(env):
     for (x, y) in _get_highlighted_cells(env):
         obj = env.grid.get(x, y)
-        if isinstance(obj, Bush) and obj.berry_color is not None and not obj.discovered:
+        if isinstance(obj, EmptyBush) and obj.berry_color is not None and not obj.discovered:
             obj.discovered = True
 
 
@@ -104,7 +85,6 @@ def _clockwise_orbit(center):
         (cx - 1, cy - 1),
     ]
 
-
 def _draw_dot(img, cx, cy, radius, color):
     h, w, _ = img.shape
     x0 = max(0, cx - radius)
@@ -120,20 +100,26 @@ def _overlay_bug(img, cell, tile_size):
     x, y = cell
     cx = x * tile_size + tile_size // 2
     cy = y * tile_size + tile_size // 2
-    _draw_dot(img, cx, cy, 4, (25, 25, 25))
-    _draw_dot(img, cx - 4, cy - 3, 2, (210, 210, 210))
-    _draw_dot(img, cx + 4, cy - 3, 2, (210, 210, 210))
-    _draw_dot(img, cx, cy + 1, 1, (255, 120, 0))
+    _draw_dot(img, cx, cy, 5, (25, 25, 25))
+    _draw_dot(img, cx - 5, cy - 4, 2, (210, 210, 210))
+    _draw_dot(img, cx + 5, cy - 4, 2, (210, 210, 210))
+    _draw_dot(img, cx, cy + 1, 2, (255, 120, 0))
 
 
-def make_scenario7_gif(env, actions, output_path="scenario7_fear.gif", fps=2.0, tile_size=48):
+def make_scenario7_gif(
+    env,
+    actions,
+    output_path="scenario7_fear.gif",
+    fps=2.0,
+    tile_size=48,
+):
     env.reset()
     frames = []
     tick = 0
 
     bug_orbits = [
-        _clockwise_orbit((6, 6)),
-        _clockwise_orbit((10, 12)),
+        _clockwise_orbit((7, 8)),
+        _clockwise_orbit((12, 12)),
     ]
     bug_phase = [0, 3]
 
@@ -145,9 +131,9 @@ def make_scenario7_gif(env, actions, output_path="scenario7_fear.gif", fps=2.0, 
         return frame
 
     def _append_frame():
-        nonlocal tick
         _check_berry_discovery(env)
         frames.append(_render_with_bugs())
+        nonlocal tick
         tick += 1
 
     _append_frame()
@@ -172,13 +158,11 @@ def make_scenario7_gif(env, actions, output_path="scenario7_fear.gif", fps=2.0, 
 
 class Scenario7Env(MiniGridEnv):
 
-    def __init__(self, max_steps=160, **kwargs):
-        width = len(LAYOUT[0])
-        height = len(LAYOUT)
+    def __init__(self, max_steps=100, **kwargs):
         mission_space = MissionSpace(mission_func=lambda: "fear scenario 7")
         super().__init__(
-            width=width,
-            height=height,
+            width=15,
+            height=15,
             max_steps=max_steps,
             see_through_walls=False,
             agent_view_size=3,
@@ -199,6 +183,7 @@ class Scenario7Env(MiniGridEnv):
         )
 
         highlight_mask = np.zeros((self.width, self.height), dtype=bool)
+
         if highlight:
             for vis_j in range(1, self.agent_view_size):
                 for vis_i in range(self.agent_view_size):
@@ -209,6 +194,7 @@ class Scenario7Env(MiniGridEnv):
                         highlight_mask[int(abs_i), int(abs_j)] = True
 
         agent_pos = (int(self.agent_pos[0]), int(self.agent_pos[1]))
+
         return self.grid.render(
             tile_size,
             agent_pos,
@@ -219,23 +205,46 @@ class Scenario7Env(MiniGridEnv):
     def _gen_grid(self, width, height):
         self.grid = Grid(width, height)
 
-        for y, row in enumerate(LAYOUT):
-            for x, ch in enumerate(row):
-                if ch == "W":
-                    self.grid.set(x, y, OuterWall())
-                elif ch in {".", "S", "G"}:
+        # Outer walls
+        for x in range(width):
+            self.grid.set(x, 0, OuterWall())
+            self.grid.set(x, height - 1, OuterWall())
+        for y in range(height):
+            self.grid.set(0, y, OuterWall())
+            self.grid.set(width - 1, y, OuterWall())
+
+        # Inner wall
+        for col in range(3, 14):
+            self.grid.set(col, 3, InnerWall())
+
+        # Inner wall
+        for col in [3]:
+            self.grid.set(col, 4, InnerWall())
+
+        # Inner wall
+        for col in [3]:
+            self.grid.set(col, 5, InnerWall())
+        
+        # Inner wall
+        for col in range(1, 9):
+            self.grid.set(col, 10, InnerWall())
+
+        # Forest floor
+        for x in range(1, width - 1):
+            for y in range(1, height - 1):
+                if self.grid.get(x, y) is None:
                     self.grid.set(x, y, Floor("green"))
-                elif ch == "B":
-                    if (x, y) == (10, 12):
-                        self.grid.set(x, y, RedBerryBush())
-                    else:
-                        self.grid.set(x, y, BlueBerryBush())
+
+        # Bushes
+        self.grid.set(9, 2, BlueBerryBush())
+        self.grid.set(7, 8, EmptyBush())
+        self.grid.set(12, 12, EmptyBush())
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
-        self.mission = "fear scenario 7"
+        self.mission = "find the preferred berry bush"
 
-
+# GIF
 if __name__ == "__main__":
     env = Scenario7Env(render_mode="rgb_array", tile_size=48)
 
@@ -243,37 +252,17 @@ if __name__ == "__main__":
     R = env.actions.right
     F = env.actions.forward
 
-    orbit_second_bush = [
-        _move_to(9, 11),
-        _wait(0.35),
-        _move_to(10, 11),
-        _wait(0.35),
-        _move_to(11, 11),
-        _wait(0.35),
-        _move_to(11, 12),
-        _wait(0.35),
-        _move_to(11, 13),
-        _wait(0.35),
-        _move_to(10, 13),
-        _wait(0.35),
-        _move_to(9, 13),
-        _wait(0.35),
-        _move_to(9, 12),
-        _wait(0.35),
-    ]
-
     actions = [
-        *([F] * 5),
-        L,
-        *([F] * 6),
-        _direct_backoff,
-        R,
-        R,
-        *([F] * 5),
-        L,
-        *([F] * 4),
+        *[F]* 10,
         _wait(1.0),
-        *orbit_second_bush,
+        _direct_backoff,
+        L, *[F]* 4,
+        L, _wait(1.0),
+        R, *[F]* 3,
+        L, *[F]* 6,
+        L, *[F]* 3,
+        R, *[F]* 2,
+        R, *[F]* 3,
     ]
 
-    make_scenario7_gif(env, actions, output_path="scenario7_fear.gif", fps=2.0, tile_size=48)
+    make_scenario7_gif(env, actions, output_path="scenario7_fear.gif", fps=1.3, tile_size=48)

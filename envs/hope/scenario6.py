@@ -19,10 +19,8 @@ from render.walls import OuterWall, InnerWall
 def _direct_backoff(env):
     back = env.agent_pos - env.dir_vec
     bx, by = int(back[0]), int(back[1])
-
     if not (0 <= bx < env.width and 0 <= by < env.height):
         return
-
     obj = env.grid.get(bx, by)
     if obj is None or obj.can_overlap():
         env.agent_pos = (bx, by)

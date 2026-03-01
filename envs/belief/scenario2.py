@@ -116,5 +116,5 @@ if __name__ == "__main__":
         R, *[F]*4,
         R, *[F]*3,      
     ]
-    make_gif(env, actions, output_path="scenario2_belief.gif", fps=1.3, tile_size=48)
+    make_gif(env, actions, output_path="output/scenario2_belief.gif", fps=1.3, tile_size=48)
     env.close()

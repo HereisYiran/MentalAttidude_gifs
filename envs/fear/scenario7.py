@@ -109,7 +109,7 @@ def _overlay_bug(img, cell, tile_size):
 def make_scenario7_gif(
     env,
     actions,
-    output_path="scenario7_fear.gif",
+    output_path="output/scenario7_fear.gif",
     fps=2.0,
     tile_size=48,
 ):
@@ -265,4 +265,4 @@ if __name__ == "__main__":
         R, *[F]* 3,
     ]
 
-    make_scenario7_gif(env, actions, output_path="scenario7_fear.gif", fps=1.3, tile_size=48)
+    make_scenario7_gif(env, actions, output_path="output/scenario7_fear.gif", fps=1.3, tile_size=48)

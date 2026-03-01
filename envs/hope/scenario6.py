@@ -60,7 +60,7 @@ def _check_berry_discovery_s5(env):
             obj.discovered = True
 
 
-def make_scenario5_gif(env, actions, output_path="scenario5_hope.gif", fps=1.3):
+def make_scenario5_gif(env, actions, output_path="output/scenario5_hope.gif", fps=1.3):
     env.reset()
     frames = []
 
@@ -190,4 +190,4 @@ if __name__ == "__main__":
         R, *[F]*6,        
         R, *[F]*3,
     ]
-    make_scenario5_gif(env, actions, output_path="scenario6_hope.gif", fps=1.3)
+    make_scenario5_gif(env, actions, output_path="output/scenario6_hope.gif", fps=1.3)

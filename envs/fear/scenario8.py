@@ -12,7 +12,7 @@ from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Floor
 from minigrid.minigrid_env import MiniGridEnv
 
-from render.objects import EmptyBush, RedBerryBush, BlueBerryBush, OrangeBerryBush
+from render.objects import EmptyBush, OrangeBerryBush
 from render.walls import OuterWall, InnerWall
 
 
@@ -25,24 +25,8 @@ def _direct_backoff(env):
     if obj is None or obj.can_overlap():
         env.agent_pos = (bx, by)
 
-
-def _move_to(x, y):
-    def _inner(env):
-        obj = env.grid.get(x, y)
-        if obj is None or obj.can_overlap():
-            old_x, old_y = int(env.agent_pos[0]), int(env.agent_pos[1])
-            env.agent_pos = (x, y)
-            dx, dy = x - old_x, y - old_y
-            if abs(dx) > abs(dy):
-                env.agent_dir = 0 if dx > 0 else 2
-            elif abs(dy) > 0:
-                env.agent_dir = 1 if dy > 0 else 3
-    return _inner
-
-
 def _wait(seconds):
     return ("wait", float(seconds))
-
 
 def _get_highlighted_cells(env):
     _, vis_mask = env.gen_obs_grid()
@@ -116,12 +100,13 @@ def make_scenario8_gif(
     env.reset()
     frames = []
     tick = 0
+    first_bush_pos = (2, 2)
+    first_bush_consumed = False
 
     bug_orbits = [
-        _clockwise_orbit((7, 8)),
-        _clockwise_orbit((12, 12)),
+        _clockwise_orbit((2, 6)),
     ]
-    bug_phase = [0, 3]
+    bug_phase = [6]
 
     def _render_with_bugs():
         frame = env.render()
@@ -150,6 +135,10 @@ def make_scenario8_gif(
         else:
             env.step(action)
 
+        if not first_bush_consumed and tuple(env.agent_pos) == first_bush_pos:
+            env.grid.set(first_bush_pos[0], first_bush_pos[1], EmptyBush())
+            first_bush_consumed = True
+
         _append_frame()
 
     env.close()
@@ -161,7 +150,7 @@ class Scenario8Env(MiniGridEnv):
     def __init__(self, max_steps=100, **kwargs):
         mission_space = MissionSpace(mission_func=lambda: "fear scenario 8")
         super().__init__(
-            width=15,
+            width=16,
             height=15,
             max_steps=max_steps,
             see_through_walls=False,
@@ -169,8 +158,8 @@ class Scenario8Env(MiniGridEnv):
             mission_space=mission_space,
             **kwargs,
         )
-        self.agent_start_pos = (1, 12)
-        self.agent_start_dir = 0
+        self.agent_start_pos = (14, 2)
+        self.agent_start_dir = 2
 
     def get_full_render(self, highlight, tile_size):
         _, vis_mask = self.gen_obs_grid()
@@ -213,21 +202,17 @@ class Scenario8Env(MiniGridEnv):
             self.grid.set(0, y, OuterWall())
             self.grid.set(width - 1, y, OuterWall())
 
-        # Inner wall
-        for col in range(3, 14):
-            self.grid.set(col, 3, InnerWall())
-
-        # Inner wall
-        for col in [3]:
+        # Inner wall: 
+        for col in range(9, 15):
             self.grid.set(col, 4, InnerWall())
 
-        # Inner wall
-        for col in [3]:
-            self.grid.set(col, 5, InnerWall())
-        
-        # Inner wall
-        for col in range(1, 9):
-            self.grid.set(col, 10, InnerWall())
+        # Inner wall: 
+        for col in list(range(1, 6)) + list(range(12, 15)):
+            self.grid.set(col, 8, InnerWall())
+
+        # Inner wall: 
+        for col in range(12, 15):
+            self.grid.set(col, 9, InnerWall())
 
         # Forest floor
         for x in range(1, width - 1):
@@ -236,9 +221,10 @@ class Scenario8Env(MiniGridEnv):
                     self.grid.set(x, y, Floor("green"))
 
         # Bushes
-        self.grid.set(9, 2, BlueBerryBush())
-        self.grid.set(7, 8, EmptyBush())
-        self.grid.set(12, 12, EmptyBush())
+        self.grid.set(2, 2, OrangeBerryBush())
+        self.grid.set(2, 6, EmptyBush())
+        self.grid.set(8, 9, OrangeBerryBush())
+        self.grid.set(1, 10, OrangeBerryBush())
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
@@ -253,16 +239,18 @@ if __name__ == "__main__":
     F = env.actions.forward
 
     actions = [
-        *[F]* 10,
+        *[F]* 11,
         _wait(1.0),
-        _direct_backoff,
-        L, *[F]* 4,
-        L, _wait(1.0),
-        R, *[F]* 3,
-        L, *[F]* 6,
+        *[F]* 1,
         L, *[F]* 3,
+        _wait(0.9),
+        _direct_backoff,
+        L, *[F]* 5,
         R, *[F]* 2,
-        R, *[F]* 3,
+        L, *[F]* 4,
+        R, *[F]* 6,
+        R, *[F]* 6,
+        R, *[F]* 1,
     ]
 
     make_scenario8_gif(env, actions, output_path="output/scenario8_fear.gif", fps=1.3, tile_size=48)

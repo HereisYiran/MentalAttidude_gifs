@@ -1,13 +1,6 @@
 import imageio
-import numpy as np
 from render.objects import Bush
 from typing import Union
-
-
-def _hold_frame(frames, frame, fps: Union[int, float], seconds: float = 1.0):
-    extra_frames = max(0, int(round(fps * seconds)) - 1)
-    for _ in range(extra_frames):
-        frames.append(frame.copy())
 
 
 def _get_highlighted_cells(env):
@@ -52,25 +45,22 @@ def make_gif(
     output_path="scenario.gif",
     fps: Union[int, float] = 4,
     tile_size=48,
+    enable_discovery: bool = True,
+    hold_on_discovery: bool = True,
 ):
     env.reset()
 
     frames = []
-    discovered = _check_berry_discovery(env)
+    discovered = _check_berry_discovery(env) if enable_discovery else []
     frame = env.render()
     frames.append(frame)
-    if discovered:
-        _hold_frame(frames, frame, fps, seconds=1.0)
 
     for action in actions:
         env.step(action)
 
-        discovered = _check_berry_discovery(env)
+        discovered = _check_berry_discovery(env) if enable_discovery else []
         frame = env.render()
         frames.append(frame)
-
-        if discovered:
-            _hold_frame(frames, frame, fps, seconds=1.2)
 
     env.close()
     imageio.mimsave(output_path, frames, fps=fps, loop=0)

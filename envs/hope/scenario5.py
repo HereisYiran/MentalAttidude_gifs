@@ -16,24 +16,6 @@ from render.objects import Bush, RedBerryBush, BlueBerryBush
 from render.walls import OuterWall, InnerWall
 
 
-def _direct_backoff(env):
-    back = env.agent_pos - env.dir_vec
-    bx, by = int(back[0]), int(back[1])
-
-    if not (0 <= bx < env.width and 0 <= by < env.height):
-        return
-
-    obj = env.grid.get(bx, by)
-    if obj is None or obj.can_overlap():
-        env.agent_pos = (bx, by)
-
-
-def backoff_actions(steps=1):
-    if steps <= 0:
-        return []
-    return [_direct_backoff for _ in range(steps)]
-
-
 def _get_highlighted_cells_s5(env):
     _, vis_mask = env.gen_obs_grid()
     f_vec = env.dir_vec
@@ -178,8 +160,8 @@ if __name__ == "__main__":
         *[F]*6,   
         R, *[F]*4,        
         R, *[F]*5, 
-        *backoff_actions(steps=1),
-        L, *[F]*4,          
+        R, R, *[F]*1,
+        R, *[F]*4,          
         L, *[F]*2, 
     ]
     make_scenario5_gif(env, actions, output_path="output/scenario5_hope.gif", fps=1.3)

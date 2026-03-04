@@ -1,7 +1,6 @@
 from minigrid.core.constants import OBJECT_TO_IDX, IDX_TO_OBJECT
-from minigrid.core.world_object import WorldObj, Floor, Wall
+from minigrid.core.world_object import WorldObj
 from minigrid.utils.rendering import fill_coords, point_in_circle, point_in_rect
-from minigrid.minigrid_env import MiniGridEnv
 from typing import Optional
 import numpy as np
 

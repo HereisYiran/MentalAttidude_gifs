@@ -16,46 +16,6 @@ from render.objects import EmptyBush, OrangeBerryBush
 from render.walls import OuterWall, InnerWall
 
 
-def _direct_backoff(env):
-    back = env.agent_pos - env.dir_vec
-    bx, by = int(back[0]), int(back[1])
-    if not (0 <= bx < env.width and 0 <= by < env.height):
-        return
-    obj = env.grid.get(bx, by)
-    if obj is None or obj.can_overlap():
-        env.agent_pos = (bx, by)
-
-def _wait(seconds):
-    return ("wait", float(seconds))
-
-def _get_highlighted_cells(env):
-    _, vis_mask = env.gen_obs_grid()
-    f_vec = env.dir_vec
-    r_vec = env.right_vec
-    top_left = (
-        env.agent_pos
-        + f_vec * (env.agent_view_size - 1)
-        - r_vec * (env.agent_view_size // 2)
-    )
-    cells = set()
-    for vis_j in range(1, env.agent_view_size):
-        for vis_i in range(env.agent_view_size):
-            if not vis_mask[vis_i, vis_j]:
-                continue
-            abs_i, abs_j = top_left - (f_vec * vis_j) + (r_vec * vis_i)
-            ai, aj = int(abs_i), int(abs_j)
-            if 0 <= ai < env.width and 0 <= aj < env.height:
-                cells.add((ai, aj))
-    return cells
-
-
-def _check_berry_discovery(env):
-    for (x, y) in _get_highlighted_cells(env):
-        obj = env.grid.get(x, y)
-        if isinstance(obj, EmptyBush) and obj.berry_color is not None and not obj.discovered:
-            obj.discovered = True
-
-
 def _clockwise_orbit(center):
     cx, cy = center
     return [
@@ -106,7 +66,7 @@ def make_scenario8_gif(
     bug_orbits = [
         _clockwise_orbit((2, 6)),
     ]
-    bug_phase = [6]
+    bug_phase = [0]
 
     def _render_with_bugs():
         frame = env.render()
@@ -116,7 +76,6 @@ def make_scenario8_gif(
         return frame
 
     def _append_frame():
-        _check_berry_discovery(env)
         frames.append(_render_with_bugs())
         nonlocal tick
         tick += 1
@@ -124,12 +83,6 @@ def make_scenario8_gif(
     _append_frame()
 
     for action in actions:
-        if isinstance(action, tuple) and len(action) == 2 and action[0] == "wait":
-            hold_frames = max(1, int(round(action[1] * fps)))
-            for _ in range(hold_frames):
-                _append_frame()
-            continue
-
         if callable(action):
             action(env)
         else:
@@ -240,17 +193,14 @@ if __name__ == "__main__":
 
     actions = [
         *[F]* 11,
-        _wait(1.0),
         *[F]* 1,
         L, *[F]* 3,
-        _wait(0.9),
-        _direct_backoff,
-        L, *[F]* 5,
+        R, R, *[F]* 1,
+        R, *[F]* 5,
         R, *[F]* 2,
         L, *[F]* 4,
         R, *[F]* 6,
         R, *[F]* 6,
-        R, *[F]* 1,
     ]
 
     make_scenario8_gif(env, actions, output_path="output/scenario8_fear.gif", fps=1.3, tile_size=48)

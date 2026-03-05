@@ -60,11 +60,9 @@ def make_scenario8_gif(
     env.reset()
     frames = []
     tick = 0
-    first_bush_pos = (2, 2)
-    first_bush_consumed = False
 
     bug_orbits = [
-        _clockwise_orbit((2, 6)),
+        _clockwise_orbit((2, 2)),
     ]
     bug_phase = [0]
 
@@ -87,10 +85,6 @@ def make_scenario8_gif(
             action(env)
         else:
             env.step(action)
-
-        if not first_bush_consumed and tuple(env.agent_pos) == first_bush_pos:
-            env.grid.set(first_bush_pos[0], first_bush_pos[1], EmptyBush())
-            first_bush_consumed = True
 
         _append_frame()
 
@@ -156,16 +150,24 @@ class Scenario8Env(MiniGridEnv):
             self.grid.set(width - 1, y, OuterWall())
 
         # Inner wall: 
-        for col in range(9, 15):
+        for col in range(6, 15):
             self.grid.set(col, 4, InnerWall())
 
         # Inner wall: 
-        for col in list(range(1, 6)) + list(range(12, 15)):
+        for col in list(range(1, 7)) + list(range(12, 15)):
             self.grid.set(col, 8, InnerWall())
 
         # Inner wall: 
         for col in range(12, 15):
             self.grid.set(col, 9, InnerWall())
+        
+        # Inner wall: 
+        for col in [4]:
+            self.grid.set(col, 12, InnerWall())
+
+        # Inner wall: 
+        for col in [4]:
+            self.grid.set(col, 13, InnerWall())
 
         # Forest floor
         for x in range(1, width - 1):
@@ -174,10 +176,9 @@ class Scenario8Env(MiniGridEnv):
                     self.grid.set(x, y, Floor("green"))
 
         # Bushes
-        self.grid.set(2, 2, OrangeBerryBush())
-        self.grid.set(2, 6, EmptyBush())
+        self.grid.set(2, 2, EmptyBush())
         self.grid.set(8, 9, OrangeBerryBush())
-        self.grid.set(1, 10, OrangeBerryBush())
+        self.grid.set(1, 10, EmptyBush())
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
@@ -192,15 +193,12 @@ if __name__ == "__main__":
     F = env.actions.forward
 
     actions = [
-        *[F]* 11,
-        *[F]* 1,
-        L, *[F]* 3,
-        R, R, *[F]* 1,
-        R, *[F]* 5,
-        R, *[F]* 2,
+        *[F]* 10,
         L, *[F]* 4,
+        L, *[F]* 7,
         R, *[F]* 6,
         R, *[F]* 6,
+        R, *[F]* 2,
     ]
 
     make_scenario8_gif(env, actions, output_path="output/scenario8_fear.gif", fps=1.3, tile_size=48)

@@ -190,9 +190,8 @@ if __name__ == "__main__":
     F = env.actions.forward
 
     actions = [
-        *[F]* 10,
-        R, R, *[F]* 1,
-        R, *[F]* 7,
+        *[F]* 9,
+        L, *[F]* 7,
         L, *[F]* 6,
         L, *[F]* 3,
         R, *[F]* 2,

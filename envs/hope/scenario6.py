@@ -170,8 +170,7 @@ if __name__ == "__main__":
 
     actions = [
         *[F]*8,
-        L, L, *[F]*1,
-        L, *[F]*6,        
+        R, *[F]*6,        
         R, *[F]*3,
     ]
     make_scenario5_gif(env, actions, output_path="output/scenario6_hope.gif", fps=1.3)

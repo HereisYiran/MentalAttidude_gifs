@@ -1,0 +1,86 @@
+{
+  "name": "fear_scenario2",
+  "category": "fear",
+  "mission": "find the preferred berry bush",
+  "grid": {
+    "width": 16,
+    "height": 15,
+    "agent_start_pos": [
+      14,
+      2
+    ],
+    "agent_start_dir": 2,
+    "max_steps": 100,
+    "agent_view_size": 3
+  },
+  "walls": {
+    "outer": true,
+    "segments": [
+      {
+        "row": 4,
+        "cols": [7, 8, 9, 10, 11, 12, 13, 14]
+      },
+      {
+        "row": 8,
+        "cols": [1, 2, 3, 4, 5, 12, 13, 14]
+      },
+      {
+        "row": 9,
+        "cols": [12, 13, 14]
+      }
+    ]
+  },
+  "bushes": [
+    {
+      "type": "orange",
+      "pos": [2, 2]
+    },
+    {
+      "type": "empty",
+      "pos": [2, 6]
+    },
+    {
+      "type": "orange",
+      "pos": [8, 9]
+    },
+    {
+      "type": "orange",
+      "pos": [1, 10]
+    }
+  ],
+  "actions": [
+    ["L", 12],
+    ["D", 2],
+    ["R", 3],
+    ["D", 2],
+    ["R", 6],
+    ["D", 6],
+    ["L", 6]
+  ],
+  "render": {
+    "fps": 1.3,
+    "tile_size": 48,
+    "enable_discovery": true,
+    "bugs": [
+      {
+        "center": [2, 6],
+        "phase": 0
+      },
+      {
+        "center": [2, 6],
+        "phase": 2
+      },
+      {
+        "center": [2, 6],
+        "phase": 4
+      },
+      {
+        "center": [2, 6],
+        "phase": 6
+      }
+    ],
+    "consume_on_step": [
+      "orange"
+    ]
+  }
+}

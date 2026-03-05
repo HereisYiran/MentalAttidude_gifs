@@ -1,0 +1,55 @@
+{
+  "name": "desire_scenario1",
+  "category": "desire",
+  "mission": "desire scenario 4",
+  "grid": {
+    "width": 13,
+    "height": 15,
+    "agent_start_pos": [1, 2],
+    "agent_start_dir": 0,
+    "max_steps": 100,
+    "agent_view_size": 3
+  },
+  "walls": {
+    "outer": true,
+    "segments": [
+      {
+        "row": 4,
+        "cols": [1, 2, 3, 4, 5, 6, 7, 8]
+      },
+      {
+        "row": 8,
+        "cols": [4, 5, 6, 7, 8, 9, 10, 11]
+      }
+    ]
+  },
+  "bushes": [
+    {
+      "type": "red",
+      "pos": [10, 10]
+    },
+    {
+      "type": "blue",
+      "pos": [10, 11]
+    },
+    {
+      "type": "orange",
+      "pos": [10, 12]
+    }
+  ],
+  "actions": [
+    ["R", 9],
+    ["D", 4],
+    ["L", 8],
+    ["D", 5],
+    ["R", 7],
+    ["U", 1]
+    ],
+
+  "render": {
+    "fps": 1.3,
+    "tile_size": 48,
+    "enable_discovery": false,
+    "label_position": "right"
+  }
+}

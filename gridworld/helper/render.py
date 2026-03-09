@@ -278,6 +278,35 @@ def _consume_on_step(env: MiniGridEnv, bush_types: list[str]):
         env.grid.set(x, y, EmptyBush())
 
 
+def _eat_berry(env: MiniGridEnv, berry_type: str | None = None):
+    def _consume_if_match(x: int, y: int) -> bool:
+        obj = env.grid.get(x, y)
+        obj_berry_type = getattr(obj, "berry_color", None)
+        if not isinstance(obj, Bush) or obj_berry_type is None:
+            return False
+        if berry_type is not None and obj_berry_type != berry_type:
+            return False
+        env.grid.set(x, y, EmptyBush())
+        return True
+
+    x, y = int(env.agent_pos[0]), int(env.agent_pos[1])
+    if _consume_if_match(x, y):
+        return
+
+    fx, fy = int(env.front_pos[0]), int(env.front_pos[1])
+    if 0 <= fx < env.width and 0 <= fy < env.height:
+        if _consume_if_match(fx, fy):
+            return
+
+    visible_cells = sorted(
+        _get_highlighted_cells(env),
+        key=lambda cell: (abs(cell[0] - x) + abs(cell[1] - y), cell[1], cell[0]),
+    )
+    for vx, vy in visible_cells:
+        if _consume_if_match(vx, vy):
+            return
+
+
 def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     scenario = load_scenario(scenario_path)
     render_cfg = scenario.get("render", {})
@@ -294,7 +323,6 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     output_path = output_dir / f"{scenario['name']}.gif"
 
     env = JsonScenarioEnv(scenario, render_mode="rgb_array", tile_size=tile_size)
-    actions = expand_actions(scenario.get("actions", []))
 
     bug_cfg = render_cfg.get("bugs", [])
     bug_orbits = [_clockwise_orbit((int(b["center"][0]), int(b["center"][1]))) for b in bug_cfg]
@@ -321,14 +349,32 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         _check_berry_discovery(env)
     frames.append(_render_frame())
 
-    for action in actions:
-        _apply_action(env, action)
-        if consume_types:
-            _consume_on_step(env, consume_types)
-        if enable_discovery:
-            _check_berry_discovery(env)
-        frames.append(_render_frame())
-        tick += 1
+    for symbol, count in scenario.get("actions", []):
+        action = str(symbol).upper()
+        amount = int(count)
+
+        if action in {"EAT_BERRY", "CONSUME_BERRY", "EAT", "DISAPPEAR_BERRY"}:
+            _eat_berry(env)
+            if enable_discovery:
+                _check_berry_discovery(env)
+            frames.append(_render_frame())
+            continue
+
+        if action in {"EAT_ORANGE", "CONSUME_ORANGE"}:
+            _eat_berry(env, "orange")
+            if enable_discovery:
+                _check_berry_discovery(env)
+            frames.append(_render_frame())
+            continue
+
+        for _ in range(max(0, amount)):
+            _apply_action(env, action)
+            if consume_types:
+                _consume_on_step(env, consume_types)
+            if enable_discovery:
+                _check_berry_discovery(env)
+            frames.append(_render_frame())
+            tick += 1
 
     env.close()
     imageio.mimsave(output_path, frames, fps=fps, loop=0)

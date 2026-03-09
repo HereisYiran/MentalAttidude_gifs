@@ -1,7 +1,6 @@
 {
   "name": "hope_scenario1",
   "category": "hope",
-  "mission": "hope scenario 5",
   "grid": {
     "width": 10,
     "height": 13,

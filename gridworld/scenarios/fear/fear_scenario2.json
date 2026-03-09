@@ -1,14 +1,10 @@
 {
   "name": "fear_scenario2",
   "category": "fear",
-  "mission": "find the preferred berry bush",
   "grid": {
     "width": 16,
     "height": 15,
-    "agent_start_pos": [
-      14,
-      2
-    ],
+    "agent_start_pos": [14, 2],
     "agent_start_dir": 2,
     "max_steps": 100,
     "agent_view_size": 3
@@ -49,9 +45,10 @@
     }
   ],
   "actions": [
-    ["L", 12],
+    ["L", 11],
+    ["EAT_BERRY", 1],
     ["D", 2],
-    ["R", 3],
+    ["R", 2],
     ["D", 2],
     ["R", 6],
     ["D", 6],
@@ -79,8 +76,6 @@
         "phase": 6
       }
     ],
-    "consume_on_step": [
-      "orange"
-    ]
+    "consume_on_step": []
   }
 }

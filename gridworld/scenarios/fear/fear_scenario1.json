@@ -1,7 +1,6 @@
 {
   "name": "fear_scenario1",
   "category": "fear",
-  "mission": "find the preferred berry bush",
   "grid": {
     "width": 15,
     "height": 15,

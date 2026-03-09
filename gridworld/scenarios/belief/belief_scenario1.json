@@ -1,7 +1,6 @@
 {
   "name": "belief_scenario1",
   "category": "belief",
-  "mission": "find the red berry bush",
   "grid": {
     "width": 11,
     "height": 14,

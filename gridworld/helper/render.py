@@ -262,7 +262,8 @@ def _dim_outside_view(
 
     original = frame.copy()
     frame[:, :, :] = (frame.astype(np.float32) * brightness).astype(np.uint8)
-    frame[visible_mask] = original[visible_mask]
+    boosted = np.clip(original.astype(np.float32) * 1.2, 0, 255).astype(np.uint8)
+    frame[visible_mask] = boosted[visible_mask]
 
 
 def _eat_berry(env: MiniGridEnv, berry_type: str | None = None):
@@ -313,6 +314,9 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
 
     env = JsonScenarioEnv(scenario, render_mode="rgb_array", tile_size=tile_size)
 
+    if dim_outside_view:
+        env.highlight = False
+
     bug_cfg = render_cfg.get("bugs", [])
     bug_orbits = [_clockwise_orbit((int(b["center"][0]), int(b["center"][1]))) for b in bug_cfg]
     bug_phase = [int(b.get("phase", 0)) for b in bug_cfg]
@@ -345,6 +349,12 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     for symbol, count in scenario.get("actions", []):
         action = str(symbol).upper()
         amount = int(count)
+
+        if action in {"WAIT", "PAUSE"}:
+            hold_frames = max(0, int(round(amount * fps)))
+            if hold_frames > 0 and frames:
+                frames.extend([frames[-1].copy() for _ in range(hold_frames)])
+            continue
 
         if action in {"EAT_BERRY", "CONSUME_BERRY", "EAT", "DISAPPEAR_BERRY"}:
             _eat_berry(env)

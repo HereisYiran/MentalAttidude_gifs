@@ -1,0 +1,54 @@
+{
+  "name": "wish_scenario2",
+  "category": "wish",
+  "grid": {
+    "width": 11,
+    "height": 14,
+    "agent_start_pos": [2, 2],
+    "agent_start_dir": 1,
+    "max_steps": 100,
+    "agent_view_size": 3
+  },
+  "walls": {
+    "outer": true,
+    "segments": [
+      {
+        "row": 4,
+        "cols": [4, 5, 6]
+      },
+      {
+        "row": 8,
+        "cols": [1, 2, 3, 4, 5]
+      }
+    ]
+  },
+  "bushes": [
+    {
+      "type": "empty",
+      "pos": [1, 6]
+    },
+    {
+      "type": "empty",
+      "pos": [9, 11]
+    },
+    {
+      "type": "empty",
+      "pos": [1, 10]
+    }
+  ],
+  "actions": [
+    ["D", 4],
+    ["R", 6],
+    ["D", 4],
+    ["L", 6],
+    ["WAIT", 1]
+  ],
+  "render": {
+    "fps": 1.3,
+    "tile_size": 48,
+    "enable_discovery": true,
+    "dim_outside_view": true,
+    "outside_view_brightness": 0.8,
+    "consume_on_step": []
+  }
+}

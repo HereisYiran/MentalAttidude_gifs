@@ -40,7 +40,7 @@ _BUSH_MAP = {
 class JsonScenarioEnv(MiniGridEnv):
     def __init__(self, scenario: dict[str, Any], **kwargs: Any):
         grid_cfg = scenario["grid"]
-        mission = scenario.get("mission", "gridworld scenario")
+        mission = scenario.get("name", "gridworld scenario")
         mission_space = MissionSpace(mission_func=lambda: mission)
         super().__init__(
             width=grid_cfg["width"],
@@ -54,37 +54,6 @@ class JsonScenarioEnv(MiniGridEnv):
         self._scenario = scenario
         self.agent_start_pos = tuple(grid_cfg["agent_start_pos"])
         self.agent_start_dir = int(grid_cfg["agent_start_dir"])
-
-    def get_full_render(self, highlight, tile_size):
-        _, vis_mask = self.gen_obs_grid()
-
-        f_vec = self.dir_vec
-        r_vec = self.right_vec
-        top_left = (
-            self.agent_pos
-            + f_vec * (self.agent_view_size - 1)
-            - r_vec * (self.agent_view_size // 2)
-        )
-
-        highlight_mask = np.zeros((self.width, self.height), dtype=bool)
-
-        if highlight:
-            for vis_j in range(1, self.agent_view_size):
-                for vis_i in range(self.agent_view_size):
-                    if not vis_mask[vis_i, vis_j]:
-                        continue
-                    abs_i, abs_j = top_left - (f_vec * vis_j) + (r_vec * vis_i)
-                    if 0 <= abs_i < self.width and 0 <= abs_j < self.height:
-                        highlight_mask[int(abs_i), int(abs_j)] = True
-
-        agent_pos = (int(self.agent_pos[0]), int(self.agent_pos[1]))
-
-        return self.grid.render(
-            tile_size,
-            agent_pos,
-            self.agent_dir,
-            highlight_mask=highlight_mask if highlight else None,
-        )
 
     def _gen_grid(self, width: int, height: int):
         self.grid = Grid(width, height)
@@ -116,19 +85,12 @@ class JsonScenarioEnv(MiniGridEnv):
 
         self.agent_pos = self.agent_start_pos
         self.agent_dir = self.agent_start_dir
-        self.mission = self._scenario.get("mission", "gridworld scenario")
+        self.mission = self._scenario.get("name", "gridworld scenario")
 
 
 def load_scenario(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
-
-
-def expand_actions(actions: list[list[Any]]) -> list[str]:
-    expanded: list[str] = []
-    for symbol, count in actions:
-        expanded.extend([str(symbol).upper()] * int(count))
-    return expanded
 
 
 def _apply_action(env: MiniGridEnv, action: str):
@@ -225,7 +187,7 @@ def _get_label_font():
         return _LABEL_FONT
 
     try:
-        _LABEL_FONT = ImageFont.truetype("DejaVuSans-Bold.ttf", 16)
+        _LABEL_FONT = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 21)
     except OSError:
         _LABEL_FONT = ImageFont.load_default()
     return _LABEL_FONT
@@ -278,6 +240,31 @@ def _consume_on_step(env: MiniGridEnv, bush_types: list[str]):
         env.grid.set(x, y, EmptyBush())
 
 
+def _dim_outside_view(
+    frame: np.ndarray,
+    visible_cells: set[tuple[int, int]],
+    tile_size: int,
+    brightness: float,
+):
+    if brightness >= 1.0:
+        return
+
+    brightness = max(0.0, min(1.0, brightness))
+    h, w, _ = frame.shape
+    visible_mask = np.zeros((h, w), dtype=bool)
+
+    for x, y in visible_cells:
+        x0 = max(0, x * tile_size)
+        x1 = min(w, (x + 1) * tile_size)
+        y0 = max(0, y * tile_size)
+        y1 = min(h, (y + 1) * tile_size)
+        visible_mask[y0:y1, x0:x1] = True
+
+    original = frame.copy()
+    frame[:, :, :] = (frame.astype(np.float32) * brightness).astype(np.uint8)
+    frame[visible_mask] = original[visible_mask]
+
+
 def _eat_berry(env: MiniGridEnv, berry_type: str | None = None):
     def _consume_if_match(x: int, y: int) -> bool:
         obj = env.grid.get(x, y)
@@ -316,6 +303,8 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     show_bush_labels = bool(render_cfg.get("show_bush_labels", True))
     label_position = str(render_cfg.get("label_position", "above")).lower()
     consume_types = [str(t) for t in render_cfg.get("consume_on_step", [])]
+    dim_outside_view = bool(render_cfg.get("dim_outside_view", False))
+    outside_view_brightness = float(render_cfg.get("outside_view_brightness", 0.28))
 
     category = scenario["category"]
     output_dir = output_root / category
@@ -341,6 +330,10 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         for idx, orbit in enumerate(bug_orbits):
             cell = orbit[(tick + bug_phase[idx]) % len(orbit)]
             _overlay_bug(frame, cell, tile_size)
+        if dim_outside_view:
+            visible_cells = _get_highlighted_cells(env)
+            visible_cells.add((int(env.agent_pos[0]), int(env.agent_pos[1])))
+            _dim_outside_view(frame, visible_cells, tile_size, outside_view_brightness)
         if show_bush_labels:
             _overlay_bush_labels(frame, bush_positions, tile_size, label_position)
         return frame

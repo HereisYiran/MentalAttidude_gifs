@@ -47,6 +47,8 @@
   "render": {
     "fps": 1.3,
     "tile_size": 48,
-    "enable_discovery": false
+    "enable_discovery": false,
+    "dim_outside_view": true,
+    "outside_view_brightness": 0.8
   }
 }

@@ -37,14 +37,18 @@
   "bushes": [
     {
       "type": "red",
-      "pos": [10, 2]
+      "pos": [10, 1]
     },
     {
-      "type": "orange",
+      "type": "blue",
+      "pos": [10, 3]
+    },
+    {
+      "type": "empty",
       "pos": [2, 6]
     },
     {
-      "type": "red",
+      "type": "orange",
       "pos": [2, 10]
     }
   ],

@@ -24,15 +24,19 @@
   },
   "bushes": [
     {
+      "type": "orange",
+      "pos": [1, 5]
+    },
+    {
       "type": "blue",
       "pos": [1, 6]
     },
     {
-      "type": "red",
+      "type": "empty",
       "pos": [8, 9]
     },
     {
-      "type": "blue",
+      "type": "empty",
       "pos": [8, 11]
     }
   ],

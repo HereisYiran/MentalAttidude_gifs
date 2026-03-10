@@ -24,12 +24,12 @@
   },
   "bushes": [
     {
-      "type": "empty",
-      "pos": [1, 6]
+      "type": "orange",
+      "pos": [1, 7]
     },
     {
       "type": "empty",
-      "pos": [9, 11]
+      "pos": [8, 11]
     },
     {
       "type": "empty",
@@ -38,6 +38,7 @@
   ],
   "actions": [
     ["D", 4],
+    ["EAT_BERRY", 1],
     ["R", 6],
     ["D", 4],
     ["L", 6],

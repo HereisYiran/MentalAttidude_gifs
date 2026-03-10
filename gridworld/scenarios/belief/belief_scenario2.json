@@ -24,24 +24,24 @@
   },
   "bushes": [
     {
+      "type": "empty",
+      "pos": [11, 3]
+    },
+    {
       "type": "orange",
-      "pos": [1, 7]
+      "pos": [11, 6]
     },
     {
       "type": "empty",
       "pos": [5, 8]
     },
     {
-      "type": "red",
-      "pos": [6, 12]
-    },
-    {
-      "type": "orange",
-      "pos": [7, 13]
-    },
-    {
-      "type": "blue",
+      "type": "empty",
       "pos": [5, 13]
+    },
+    {
+      "type": "empty",
+      "pos": [7, 13]
     }
   ],
   "actions": [

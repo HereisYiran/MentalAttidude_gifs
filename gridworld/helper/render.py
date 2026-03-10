@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from pathlib import Path
 import json
 import sys
@@ -143,6 +144,7 @@ def _check_berry_discovery(env: MiniGridEnv):
             obj.discovered = True
 
 
+# Legacy 8-cell orbit (kept for reference)
 def _clockwise_orbit(center: tuple[int, int]) -> list[tuple[int, int]]:
     cx, cy = center
     return [
@@ -155,6 +157,27 @@ def _clockwise_orbit(center: tuple[int, int]) -> list[tuple[int, int]]:
         (cx - 1, cy),
         (cx - 1, cy - 1),
     ]
+
+
+ORBIT_POSITIONS = 8  # number of discrete positions in the original orbit
+
+
+def _smooth_bug_pixel_pos(
+    center: tuple[int, int],
+    orbit_frac: float,
+    tile_size: int,
+    orbit_radius: float = 1.0,
+) -> tuple[int, int]:
+    """Return (px, py) pixel coords for a bug on a smooth circular orbit.
+
+    *orbit_frac* goes from 0 → 1 for one full revolution (clockwise, starting
+    from directly above *center*).
+    """
+    cx, cy = center
+    angle = 2.0 * math.pi * orbit_frac
+    px = cx * tile_size + tile_size / 2 + orbit_radius * tile_size * math.sin(angle)
+    py = cy * tile_size + tile_size / 2 - orbit_radius * tile_size * math.cos(angle)
+    return int(round(px)), int(round(py))
 
 
 def _draw_dot(img: np.ndarray, cx: int, cy: int, radius: int, color: tuple[int, int, int]):
@@ -172,10 +195,15 @@ def _overlay_bug(img: np.ndarray, cell: tuple[int, int], tile_size: int):
     x, y = cell
     cx = x * tile_size + tile_size // 2
     cy = y * tile_size + tile_size // 2
-    _draw_dot(img, cx, cy, 5, (25, 25, 25))
-    _draw_dot(img, cx - 5, cy - 4, 2, (210, 210, 210))
-    _draw_dot(img, cx + 5, cy - 4, 2, (210, 210, 210))
-    _draw_dot(img, cx, cy + 1, 2, (255, 120, 0))
+    _overlay_bug_at_pixel(img, cx, cy)
+
+
+def _overlay_bug_at_pixel(img: np.ndarray, px: int, py: int):
+    """Draw a bug sprite at arbitrary pixel coordinates."""
+    _draw_dot(img, px, py, 5, (25, 25, 25))
+    _draw_dot(img, px - 5, py - 4, 2, (210, 210, 210))
+    _draw_dot(img, px + 5, py - 4, 2, (210, 210, 210))
+    _draw_dot(img, px, py + 1, 2, (255, 120, 0))
 
 
 _LABEL_FONT = None
@@ -318,8 +346,12 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         env.highlight = False
 
     bug_cfg = render_cfg.get("bugs", [])
-    bug_orbits = [_clockwise_orbit((int(b["center"][0]), int(b["center"][1]))) for b in bug_cfg]
     bug_phase = [int(b.get("phase", 0)) for b in bug_cfg]
+    bug_centers = [(int(b["center"][0]), int(b["center"][1])) for b in bug_cfg]
+    bug_orbit_radius = float(render_cfg.get("bug_orbit_radius", 1.2))
+    # Sub-frames between each agent step for smooth bug flight.
+    # Only used when there are bugs; otherwise keep 1 to avoid bloating frames.
+    bug_sub_frames = int(render_cfg.get("bug_sub_frames", 4)) if bug_cfg else 1
     bush_positions = [
         (int(bush["pos"][0]), int(bush["pos"][1]))
         for bush in scenario.get("bushes", [])
@@ -327,13 +359,16 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
 
     env.reset()
     frames = []
-    tick = 0
+    bug_time = 0.0          # continuous bug tick (advances by 1.0 per agent step)
+    bug_dt = 1.0 / bug_sub_frames  # how much bug_time advances per sub-frame
 
-    def _render_frame() -> np.ndarray:
+    def _render_frame(bt: float) -> np.ndarray:
         frame = env.render()
-        for idx, orbit in enumerate(bug_orbits):
-            cell = orbit[(tick + bug_phase[idx]) % len(orbit)]
-            _overlay_bug(frame, cell, tile_size)
+        for idx, center in enumerate(bug_centers):
+            phase_offset = bug_phase[idx] / ORBIT_POSITIONS
+            orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
+            px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
+            _overlay_bug_at_pixel(frame, px, py)
         if dim_outside_view:
             visible_cells = _get_highlighted_cells(env)
             visible_cells.add((int(env.agent_pos[0]), int(env.agent_pos[1])))
@@ -344,30 +379,35 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
 
     if enable_discovery:
         _check_berry_discovery(env)
-    frames.append(_render_frame())
+    frames.append(_render_frame(bug_time))
 
     for symbol, count in scenario.get("actions", []):
         action = str(symbol).upper()
         amount = int(count)
 
         if action in {"WAIT", "PAUSE"}:
-            hold_frames = max(0, int(round(amount * fps)))
-            if hold_frames > 0 and frames:
-                frames.extend([frames[-1].copy() for _ in range(hold_frames)])
+            hold_count = max(0, int(round(amount * fps)))
+            for _ in range(hold_count * bug_sub_frames):
+                bug_time += bug_dt
+                frames.append(_render_frame(bug_time))
             continue
 
         if action in {"EAT_BERRY", "CONSUME_BERRY", "EAT", "DISAPPEAR_BERRY"}:
             _eat_berry(env)
             if enable_discovery:
                 _check_berry_discovery(env)
-            frames.append(_render_frame())
+            for _ in range(bug_sub_frames):
+                bug_time += bug_dt
+                frames.append(_render_frame(bug_time))
             continue
 
         if action in {"EAT_ORANGE", "CONSUME_ORANGE"}:
             _eat_berry(env, "orange")
             if enable_discovery:
                 _check_berry_discovery(env)
-            frames.append(_render_frame())
+            for _ in range(bug_sub_frames):
+                bug_time += bug_dt
+                frames.append(_render_frame(bug_time))
             continue
 
         for _ in range(max(0, amount)):
@@ -376,9 +416,11 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
                 _consume_on_step(env, consume_types)
             if enable_discovery:
                 _check_berry_discovery(env)
-            frames.append(_render_frame())
-            tick += 1
+            for _ in range(bug_sub_frames):
+                bug_time += bug_dt
+                frames.append(_render_frame(bug_time))
 
     env.close()
-    imageio.mimsave(output_path, frames, fps=fps, loop=0)
+    # Scale fps by sub-frames so overall animation speed is preserved.
+    imageio.mimsave(output_path, frames, fps=fps * bug_sub_frames, loop=0)
     return output_path

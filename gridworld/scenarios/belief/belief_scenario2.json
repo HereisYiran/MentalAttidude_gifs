@@ -32,16 +32,16 @@
       "pos": [5, 8]
     },
     {
-      "type": "empty",
-      "pos": [6, 14]
+      "type": "red",
+      "pos": [6, 12]
     },
     {
-      "type": "empty",
-      "pos": [3, 13]
+      "type": "orange",
+      "pos": [7, 13]
     },
     {
-      "type": "empty",
-      "pos": [1, 14]
+      "type": "blue",
+      "pos": [5, 13]
     }
   ],
   "actions": [

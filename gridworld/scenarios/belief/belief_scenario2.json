@@ -2,10 +2,10 @@
   "name": "belief_scenario2",
   "category": "belief",
   "grid": {
-    "width": 13,
-    "height": 16,
-    "agent_start_pos": [1, 2],
-    "agent_start_dir": 0,
+    "width": 11,
+    "height": 14,
+    "agent_start_pos": [9, 2],
+    "agent_start_dir": 2,
     "max_steps": 100,
     "agent_view_size": 3
   },
@@ -14,63 +14,41 @@
     "segments": [
       {
         "row": 5,
-        "cols": [1, 2, 3, 4, 11]
+        "cols": [6, 7, 8, 9]
       },
       {
-        "row": 10,
-        "cols": [1, 2, 10, 11]
+        "row": 9,
+        "cols": [1, 2, 3, 4]
       }
     ]
   },
   "bushes": [
     {
       "type": "empty",
-      "pos": [11, 3]
+      "pos": [1, 2]
     },
     {
-      "type": "orange",
-      "pos": [11, 6]
-    },
-    {
-      "type": "empty",
-      "pos": [5, 8]
+      "type": "red",
+      "pos": [1, 8]
     },
     {
       "type": "empty",
-      "pos": [5, 13]
-    },
-    {
-      "type": "empty",
-      "pos": [7, 13]
+      "pos": [8, 12]
     }
   ],
   "actions": [
-    ["R", 5],
-    ["D", 8]
+    ["L", 5],
+    ["D", 5],
+    ["R", 4],
+    ["D", 2]
   ],
+
+
   "render": {
     "fps": 1.3,
     "tile_size": 48,
     "enable_discovery": true,
     "dim_outside_view": true,
-    "outside_view_brightness": 0.8,
-    "bugs": [
-      {
-        "center": [5, 8],
-        "phase": 0
-      },
-      {
-        "center": [5, 8],
-        "phase": 2
-      },
-      {
-        "center": [5, 8],
-        "phase": 4
-      },
-      {
-        "center": [5, 8],
-        "phase": 6
-      }
-    ]
+    "outside_view_brightness": 0.8
   }
 }

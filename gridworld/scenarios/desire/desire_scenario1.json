@@ -3,9 +3,9 @@
   "category": "desire",
   "grid": {
     "width": 13,
-    "height": 15,
-    "agent_start_pos": [1, 2],
-    "agent_start_dir": 0,
+    "height": 11,
+    "agent_start_pos": [11, 2],
+    "agent_start_dir": 2,
     "max_steps": 100,
     "agent_view_size": 3
   },
@@ -14,10 +14,6 @@
     "segments": [
       {
         "row": 4,
-        "cols": [1, 2, 3, 4, 5, 6, 7, 8]
-      },
-      {
-        "row": 8,
         "cols": [4, 5, 6, 7, 8, 9, 10, 11]
       }
     ]
@@ -25,21 +21,19 @@
   "bushes": [
     {
       "type": "red",
-      "pos": [10, 10]
+      "pos": [10, 6]
     },
     {
       "type": "blue",
-      "pos": [10, 11]
+      "pos": [10, 7]
     },
     {
       "type": "orange",
-      "pos": [10, 12]
+      "pos": [10, 8]
     }
   ],
   "actions": [
-    ["R", 9],
-    ["D", 4],
-    ["L", 8],
+    ["L", 9],
     ["D", 5],
     ["R", 7],
     ["U", 1]

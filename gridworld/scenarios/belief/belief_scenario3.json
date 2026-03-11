@@ -1,0 +1,55 @@
+{
+  "name": "belief_scenario3",
+  "category": "belief",
+  "grid": {
+    "width": 11,
+    "height": 14,
+    "agent_start_pos": [1, 11],
+    "agent_start_dir": 0,
+    "max_steps": 100,
+    "agent_view_size": 3
+  },
+  "walls": {
+    "outer": true,
+    "segments": [
+      {
+        "row": 5,
+        "cols": [6, 7, 8, 9]
+      },
+      {
+        "row": 9,
+        "cols": [1, 2, 3, 4]
+      }
+    ]
+  },
+  "bushes": [
+    {
+      "type": "empty",
+      "pos": [9, 12]
+    },
+    {
+      "type": "red",
+      "pos": [1, 8]
+    },
+    {
+      "type": "empty",
+      "pos": [9, 2]
+    }
+  ],
+  "actions": [
+    ["R", 5],
+    ["U", 4],
+    ["L", 2],
+    ["U", 5],
+    ["R", 2]
+  ],
+
+
+  "render": {
+    "fps": 1.3,
+    "tile_size": 48,
+    "enable_discovery": true,
+    "dim_outside_view": true,
+    "outside_view_brightness": 0.8
+  }
+}

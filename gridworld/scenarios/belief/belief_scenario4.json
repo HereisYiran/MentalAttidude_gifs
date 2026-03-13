@@ -54,6 +54,7 @@
     "enable_discovery": true,
     "dim_outside_view": true,
     "outside_view_brightness": 0.8,
+    "label_position": "bottom_right",
     "bugs": [
       {
         "center": [5, 8],

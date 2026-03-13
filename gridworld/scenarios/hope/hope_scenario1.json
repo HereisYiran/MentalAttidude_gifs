@@ -52,6 +52,7 @@
     "tile_size": 48,
     "enable_discovery": true,
     "dim_outside_view": true,
-    "outside_view_brightness": 0.8
+    "outside_view_brightness": 0.8,
+    "label_position": "bottom_right"
   }
 }

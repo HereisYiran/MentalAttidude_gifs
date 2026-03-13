@@ -21,7 +21,48 @@ from minigrid.core.grid import Grid
 from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Floor
 from minigrid.minigrid_env import MiniGridEnv
+from minigrid.core.world_object import Floor
+from minigrid.utils.rendering import fill_coords, point_in_rect
 
+class WarmGrassFloor(Floor):
+
+    BASE = (126, 200, 80)   # #7ec850
+    DARK = (109, 184, 68)   # #6db844
+    LIGHT = (142, 212, 90)  # #8ed45a
+    GRID = (95, 165, 55)
+
+    def __init__(self):
+        super().__init__("green")
+
+    def render(self, img):
+
+        # base color
+        fill_coords(img, point_in_rect(0, 1, 0, 1), self.BASE)
+
+        # darker texture rectangles
+        patches_dark = [
+            (0.12,0.18,0.22,0.30),
+            (0.70,0.76,0.14,0.20),
+            (0.45,0.52,0.55,0.63),
+            (0.30,0.35,0.70,0.78)
+        ]
+
+        for x1,x2,y1,y2 in patches_dark:
+            fill_coords(img, point_in_rect(x1,x2,y1,y2), self.DARK)
+
+        # lighter texture rectangles
+        patches_light = [
+            (0.60,0.66,0.22,0.30),
+            (0.18,0.25,0.60,0.68),
+            (0.74,0.80,0.60,0.68)
+        ]
+
+        for x1,x2,y1,y2 in patches_light:
+            fill_coords(img, point_in_rect(x1,x2,y1,y2), self.LIGHT)
+
+        # grid lines
+        fill_coords(img, point_in_rect(0.0,1.0,0.0,0.02), self.GRID)
+        fill_coords(img, point_in_rect(0.0,0.02,0.0,1.0), self.GRID)
 
 _CARDINAL_TO_DIR = {
     "R": 0,
@@ -76,7 +117,7 @@ class JsonScenarioEnv(MiniGridEnv):
         for x in range(1, width - 1):
             for y in range(1, height - 1):
                 if self.grid.get(x, y) is None:
-                    self.grid.set(x, y, Floor("green"))
+                    self.grid.set(x, y, WarmGrassFloor())
 
         for bush in self._scenario.get("bushes", []):
             bush_type = bush["type"]
@@ -215,7 +256,7 @@ def _get_label_font():
         return _LABEL_FONT
 
     try:
-        _LABEL_FONT = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 21)
+        _LABEL_FONT = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 19)
     except OSError:
         _LABEL_FONT = ImageFont.load_default()
     return _LABEL_FONT
@@ -235,6 +276,7 @@ def _overlay_bush_labels(
         label = str(index)
         center_x = x * tile_size + tile_size // 2
         top_y = y * tile_size
+        bottom_y = (y + 1) * tile_size          # add this
         right_x = x * tile_size + tile_size
         center_y = y * tile_size + tile_size // 2
         text_bbox = draw.textbbox((0, 0), label, font=font)
@@ -244,7 +286,13 @@ def _overlay_bush_labels(
         if label_position == "right":
             label_x = right_x + 2
             label_y = center_y - text_h // 2
-        else:
+        elif label_position == "below":                  # add this branch
+            label_x = center_x - text_w // 2
+            label_y = bottom_y - text_h - 2             # sits just inside bottom edge
+        elif label_position == "bottom_right":
+            label_x = right_x - text_w - 2      # 2px padding from right edge
+            label_y = bottom_y - text_h - 2     # 2px padding from bottom edge
+        else:  # "above" (default)
             label_x = center_x - text_w // 2
             label_y = max(1, top_y + 1 - text_h)
 

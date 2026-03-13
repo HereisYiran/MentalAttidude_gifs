@@ -15,6 +15,28 @@ register_object("red_berry_bush")
 register_object("blue_berry_bush")
 register_object("orange_berry_bush")
 
+def draw_grass_tile(r):
+    BASE  = (126,200,80)   # #7ec850
+    DARK  = (109,184,68)   # #6db844
+    LIGHT = (142,212,90)   # #8ed45a
+    GRID  = (95,165,55)
+
+    # base
+    fill_coords(r, point_in_rect(0,1,0,1), BASE)
+
+    # darker patches
+    fill_coords(r, point_in_rect(0.12,0.18,0.25,0.30), DARK)
+    fill_coords(r, point_in_rect(0.65,0.70,0.55,0.60), DARK)
+    fill_coords(r, point_in_rect(0.35,0.40,0.65,0.70), DARK)
+
+    # lighter patches
+    fill_coords(r, point_in_rect(0.22,0.27,0.45,0.50), LIGHT)
+    fill_coords(r, point_in_rect(0.70,0.75,0.30,0.35), LIGHT)
+
+    # grid lines
+    fill_coords(r, point_in_rect(0,1,0,0.02), GRID)
+    fill_coords(r, point_in_rect(0,0.02,0,1), GRID)
+
 # Bushes
 class Bush(WorldObj):
     BERRY_COLORS = {
@@ -32,7 +54,9 @@ class Bush(WorldObj):
         return True
 
     def render(self, r: np.ndarray) -> np.ndarray:
-        fill_coords(r, point_in_rect(0.20, 0.80, 0.78, 0.92), (101, 67, 33))
+        draw_grass_tile(r)
+
+
         fill_coords(r, point_in_rect(0.44, 0.56, 0.58, 0.82), (90, 55, 20))
         DARK_GREEN  = (30, 110, 30)
         MID_GREEN   = (50, 160, 50)

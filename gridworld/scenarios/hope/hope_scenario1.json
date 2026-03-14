@@ -33,11 +33,7 @@
     },
     {
       "type": "empty",
-      "pos": [8, 9]
-    },
-    {
-      "type": "empty",
-      "pos": [8, 11]
+      "pos": [8, 10]
     }
   ],
   "actions": [

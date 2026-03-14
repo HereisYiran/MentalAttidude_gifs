@@ -240,11 +240,31 @@ def _overlay_bug(img: np.ndarray, cell: tuple[int, int], tile_size: int):
 
 
 def _overlay_bug_at_pixel(img: np.ndarray, px: int, py: int):
-    """Draw a bug sprite at arbitrary pixel coordinates."""
-    _draw_dot(img, px, py, 5, (25, 25, 25))
-    _draw_dot(img, px - 5, py - 4, 2, (210, 210, 210))
-    _draw_dot(img, px + 5, py - 4, 2, (210, 210, 210))
-    _draw_dot(img, px, py + 1, 2, (255, 120, 0))
+    """Draw a more intuitive bug sprite."""
+
+    BODY = (40, 40, 40)
+    SHELL = (200, 50, 50)
+    HEAD = (25, 25, 25)
+    LEG = (30, 30, 30)
+    HIGHLIGHT = (240, 120, 120)
+
+    # body
+    _draw_dot(img, px, py, 5, BODY)
+
+    # shell
+    _draw_dot(img, px, py, 4, SHELL)
+
+    # head
+    _draw_dot(img, px, py - 6, 2, HEAD)
+
+    # legs
+    _draw_dot(img, px - 6, py + 1, 1, LEG)
+    _draw_dot(img, px + 6, py + 1, 1, LEG)
+    _draw_dot(img, px - 6, py - 2, 1, LEG)
+    _draw_dot(img, px + 6, py - 2, 1, LEG)
+
+    # highlight
+    _draw_dot(img, px - 2, py - 1, 1, HIGHLIGHT)
 
 
 _LABEL_FONT = None

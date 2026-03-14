@@ -2,7 +2,7 @@
   "name": "hope_scenario2",
   "category": "hope",
   "grid": {
-    "width": 13,
+    "width": 12,
     "height": 13,
     "agent_start_pos": [1, 2],
     "agent_start_dir": 0,
@@ -30,38 +30,40 @@
       },
       {
         "row": 11,
-        "cols": [4, 5, 6, 7, 8, 9, 10, 11]
+        "cols": [4, 5, 6, 7, 8, 9, 10]
       }
     ]
   },
   "bushes": [
     {
       "type": "red",
-      "pos": [10, 1]
+      "pos": [9, 1]
     },
     {
       "type": "blue",
-      "pos": [10, 3]
+      "pos": [9, 3]
     },
     {
       "type": "empty",
-      "pos": [2, 6]
+      "pos": [2, 5]
     },
     {
       "type": "orange",
-      "pos": [2, 10]
+      "pos": [2, 11]
     }
   ],
   "actions": [
-    ["R", 8],
+    ["R", 7],
     ["D", 6],
-    ["L", 3]
+    ["L", 6],
+    ["U", 1]
   ],
   "render": {
     "fps": 1.3,
     "tile_size": 48,
     "enable_discovery": true,
     "dim_outside_view": true,
-    "outside_view_brightness": 0.8
+    "outside_view_brightness": 0.8,
+    "label_position": "bottom_right"
   }
 }

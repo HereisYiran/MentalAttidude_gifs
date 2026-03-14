@@ -1,9 +1,9 @@
 {
-  "name": "wish_scenario1",
-  "category": "wish",
+  "name": "hope_scenario3",
+  "category": "hope",
   "grid": {
     "width": 11,
-    "height": 14,
+    "height": 13,
     "agent_start_pos": [9, 2],
     "agent_start_dir": 2,
     "max_steps": 100,
@@ -14,35 +14,34 @@
     "segments": [
       {
         "row": 4,
-        "cols": [5, 6, 7, 8, 9]
+        "cols": [4, 5, 6, 7, 8, 9]
       },
       {
         "row": 8,
-        "cols": [1, 2, 3, 4, 5]
+        "cols": [4, 5, 6]
       }
     ]
   },
   "bushes": [
     {
       "type": "blue",
-      "pos": [2, 7]
+      "pos": [1, 2]
     },
     {
       "type": "empty",
-      "pos": [9, 11]
+      "pos": [8, 11]
     },
-    {
-      "type": "empty",
-      "pos": [1, 11]
+      {
+      "type": "blue",
+      "pos": [2, 11]
     }
   ],
   "actions": [
     ["L", 7],
-    ["D", 4],
     ["EAT_BERRY", 1],
-    ["R", 6],
     ["D", 4],
-    ["L", 6]
+    ["R", 6],
+    ["D", 1]
   ],
   "render": {
     "fps": 1.3,

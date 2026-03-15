@@ -3,7 +3,7 @@
   "category": "hope",
   "grid": {
     "width": 12,
-    "height": 13,
+    "height": 12,
     "agent_start_pos": [1, 2],
     "agent_start_dir": 0,
     "max_steps": 100,
@@ -24,39 +24,31 @@
         "row": 6,
         "cols": [4]
       },
-      {
-        "row": 10,
+            {
+        "row": 7,
         "cols": [4]
-      },
-      {
-        "row": 11,
-        "cols": [4, 5, 6, 7, 8, 9, 10]
       }
     ]
   },
   "bushes": [
     {
-      "type": "red",
-      "pos": [9, 1]
+      "type": "blue",
+      "pos": [9, 2]
     },
     {
-      "type": "blue",
-      "pos": [9, 3]
+      "type": "empty",
+      "pos": [8, 10]
     },
     {
       "type": "empty",
       "pos": [2, 5]
-    },
-    {
-      "type": "orange",
-      "pos": [2, 11]
     }
   ],
   "actions": [
     ["R", 7],
-    ["D", 6],
-    ["L", 6],
-    ["U", 1]
+    ["EAT_BERRY", 1],
+    ["D", 7],
+    ["L", 5]
   ],
   "render": {
     "fps": 1.3,

@@ -17,29 +17,38 @@
         "cols": [4, 5, 6, 7, 8, 9]
       },
       {
+        "row": 6,
+        "cols": [1]
+      },
+      {
+        "row": 7,
+        "cols": [2]
+      },
+      {
         "row": 8,
-        "cols": [4, 5, 6]
+        "cols": [1, 2, 3, 4, 5, 6]
       }
     ]
   },
   "bushes": [
     {
-      "type": "blue",
+      "type": "red",
       "pos": [1, 2]
+    },
+    {
+      "type": "red",
+      "pos": [1, 7]
     },
     {
       "type": "empty",
       "pos": [8, 11]
-    },
-      {
-      "type": "blue",
-      "pos": [2, 11]
     }
   ],
   "actions": [
     ["L", 7],
     ["EAT_BERRY", 1],
     ["D", 4],
+    ["WAIT", 1],
     ["R", 6],
     ["D", 1]
   ],
@@ -49,6 +58,7 @@
     "enable_discovery": true,
     "dim_outside_view": true,
     "outside_view_brightness": 0.8,
-    "consume_on_step": []
+    "consume_on_step": [],
+    "label_position": "bottom_right"
   }
 }

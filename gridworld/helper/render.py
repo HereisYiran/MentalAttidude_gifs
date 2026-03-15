@@ -209,11 +209,7 @@ def _smooth_bug_pixel_pos(
     tile_size: int,
     orbit_radius: float = 1.0,
 ) -> tuple[int, int]:
-    """Return (px, py) pixel coords for a bug on a smooth circular orbit.
-
-    *orbit_frac* goes from 0 → 1 for one full revolution (clockwise, starting
-    from directly above *center*).
-    """
+    """Return (px, py) pixel coords for a bug on a smooth circular orbit."""
     cx, cy = center
     angle = 2.0 * math.pi * orbit_frac
     px = cx * tile_size + tile_size / 2 + orbit_radius * tile_size * math.sin(angle)
@@ -231,6 +227,51 @@ def _draw_dot(img: np.ndarray, cx: int, cy: int, radius: int, color: tuple[int, 
     mask = (xx - cx) ** 2 + (yy - cy) ** 2 <= radius ** 2
     img[y0:y1 + 1, x0:x1 + 1][mask] = color
 
+def _draw_triangle_alpha(img, cx, cy, size, direction, alpha):
+
+    RED = np.array([255, 0, 0], dtype=np.float32)
+
+    if direction == 0:   # right
+        pts = [(cx+size,cy),(cx-size,cy-size),(cx-size,cy+size)]
+    elif direction == 2: # left
+        pts = [(cx-size,cy),(cx+size,cy-size),(cx+size,cy+size)]
+    elif direction == 3: # up
+        pts = [(cx,cy-size),(cx-size,cy+size),(cx+size,cy+size)]
+    else:                # down
+        pts = [(cx,cy+size),(cx-size,cy-size),(cx+size,cy-size)]
+
+    pts = np.array(pts)
+
+    minx = int(pts[:,0].min())
+    maxx = int(pts[:,0].max())
+    miny = int(pts[:,1].min())
+    maxy = int(pts[:,1].max())
+
+    for y in range(miny,maxy+1):
+        for x in range(minx,maxx+1):
+
+            if 0 <= x < img.shape[1] and 0 <= y < img.shape[0]:
+
+                v0 = pts[2]-pts[0]
+                v1 = pts[1]-pts[0]
+                v2 = np.array([x,y])-pts[0]
+
+                dot00=np.dot(v0,v0)
+                dot01=np.dot(v0,v1)
+                dot02=np.dot(v0,v2)
+                dot11=np.dot(v1,v1)
+                dot12=np.dot(v1,v2)
+
+                inv=1/(dot00*dot11-dot01*dot01+1e-6)
+
+                u=(dot11*dot02-dot01*dot12)*inv
+                v=(dot00*dot12-dot01*dot02)*inv
+
+                if u>=0 and v>=0 and u+v<1:
+
+                    img[y,x] = (
+                        img[y,x]*(1-alpha) + RED*alpha
+                    ).astype(np.uint8)
 
 def _overlay_bug(img: np.ndarray, cell: tuple[int, int], tile_size: int):
     x, y = cell
@@ -296,7 +337,7 @@ def _overlay_bush_labels(
         label = str(index)
         center_x = x * tile_size + tile_size // 2
         top_y = y * tile_size
-        bottom_y = (y + 1) * tile_size          # add this
+        bottom_y = (y + 1) * tile_size
         right_x = x * tile_size + tile_size
         center_y = y * tile_size + tile_size // 2
         text_bbox = draw.textbbox((0, 0), label, font=font)
@@ -306,12 +347,12 @@ def _overlay_bush_labels(
         if label_position == "right":
             label_x = right_x + 2
             label_y = center_y - text_h // 2
-        elif label_position == "below":                  # add this branch
+        elif label_position == "below":
             label_x = center_x - text_w // 2
-            label_y = bottom_y - text_h - 2             # sits just inside bottom edge
+            label_y = bottom_y - text_h - 2
         elif label_position == "bottom_right":
-            label_x = right_x - text_w - 2      # 2px padding from right edge
-            label_y = bottom_y - text_h - 2     # 2px padding from bottom edge
+            label_x = right_x - text_w - 2
+            label_y = bottom_y - text_h - 2
         else:  # "above" (default)
             label_x = center_x - text_w // 2
             label_y = max(1, top_y + 1 - text_h)
@@ -391,6 +432,111 @@ def _eat_berry(env: MiniGridEnv, berry_type: str | None = None):
             return
 
 
+# ---------------------------------------------------------------------------
+# Scripted bug: follows a waypoint path, triggered by game events
+# ---------------------------------------------------------------------------
+
+class ScriptedBug:
+    """A bug that lurks at a hidden position, then walks a path on trigger.
+
+    JSON config keys (inside render.scripted_bugs list):
+      start           [x, y]        initial (lurking) tile position
+      path            [[x,y], ...]  waypoints to walk after trigger fires
+      trigger         str           "after_eat_orange" | "after_eat_red" |
+                                    "after_eat" | "immediate" | "after_step_N"
+      eat_at_end      bool          consume a berry after the path finishes
+      eat_target      [x, y]        which cell to eat from (defaults to path[-1]);
+                                    use this to eat an adjacent bush without
+                                    stepping onto it
+      eat_pause_frames int          sub-frames to wait at final waypoint before
+                                    eating (fps * bug_sub_frames ≈ 1 second)
+      steps_per_cell  int           sub-frames spent moving between waypoints
+    """
+
+    def __init__(self, cfg: dict):
+        self.start: tuple[int, int] = tuple(cfg["start"])
+        self.path: list[tuple[int, int]] = [tuple(p) for p in cfg.get("path", [])]
+        self.trigger: str = cfg.get("trigger", "after_eat_orange")
+        self.eat_at_end: bool = bool(cfg.get("eat_at_end", True))
+        # eat_target: explicit cell to consume; falls back to path[-1] if omitted
+        raw_target = cfg.get("eat_target", None)
+        self.eat_target: tuple[int, int] | None = tuple(raw_target) if raw_target is not None else None
+        self.eat_pause_frames: int = max(0, int(cfg.get("eat_pause_frames", 0)))
+        self.steps_per_cell: int = max(1, int(cfg.get("steps_per_cell", 4)))
+
+        # runtime state
+        self.triggered: bool = False
+        self.finished: bool = False
+        self._path_idx: int = 0
+        self._step_in_cell: int = 0
+        self._pos: tuple[float, float] = (float(self.start[0]), float(self.start[1]))
+        self._berry_eaten: bool = False
+        self._eat_pause_elapsed: int = 0   # sub-frames spent in pre-eat pause
+
+    def notify_event(self, event: str):
+        if self.triggered:
+            return
+        if self.trigger == "immediate" or self.trigger == event:
+            self.triggered = True
+
+    def notify_step(self, step_count: int):
+        if self.triggered:
+            return
+        if self.trigger.startswith("after_step_"):
+            try:
+                if step_count >= int(self.trigger.split("_")[-1]):
+                    self.triggered = True
+            except ValueError:
+                pass
+
+    def advance(self, env: MiniGridEnv):
+        """Move one sub-frame along the path."""
+        if not self.triggered or self.finished:
+            return
+
+        if self._path_idx >= len(self.path):
+            # Arrived — pause, then eat, then finish
+            if self.eat_at_end and not self._berry_eaten:
+                if self._eat_pause_elapsed < self.eat_pause_frames:
+                    self._eat_pause_elapsed += 1
+                    return
+                # Determine which cell holds the berry
+                if self.eat_target is not None:
+                    cx, cy = self.eat_target
+                elif self.path:
+                    cx, cy = self.path[-1]
+                else:
+                    cx, cy = self.start
+                obj = env.grid.get(int(cx), int(cy))
+                if isinstance(obj, Bush) and getattr(obj, "berry_color", None) is not None:
+                    env.grid.set(int(cx), int(cy), EmptyBush())
+                self._berry_eaten = True
+            self.finished = True
+            return
+
+        target = self.path[self._path_idx]
+        tx, ty = float(target[0]), float(target[1])
+
+        if self._path_idx == 0:
+            sx, sy = float(self.start[0]), float(self.start[1])
+        else:
+            prev = self.path[self._path_idx - 1]
+            sx, sy = float(prev[0]), float(prev[1])
+
+        self._step_in_cell += 1
+        frac = min(self._step_in_cell / self.steps_per_cell, 1.0)
+        self._pos = (sx + (tx - sx) * frac, sy + (ty - sy) * frac)
+
+        if frac >= 1.0:
+            self._path_idx += 1
+            self._step_in_cell = 0
+
+    def pixel_pos(self, tile_size: int) -> tuple[int, int]:
+        px = self._pos[0] * tile_size + tile_size / 2
+        py = self._pos[1] * tile_size + tile_size / 2
+        return int(round(px)), int(round(py))
+
+
 def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     scenario = load_scenario(scenario_path)
     render_cfg = scenario.get("render", {})
@@ -413,13 +559,20 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     if dim_outside_view:
         env.highlight = False
 
+    # --- orbital bugs (legacy) ---
     bug_cfg = render_cfg.get("bugs", [])
     bug_phase = [int(b.get("phase", 0)) for b in bug_cfg]
     bug_centers = [(int(b["center"][0]), int(b["center"][1])) for b in bug_cfg]
     bug_orbit_radius = float(render_cfg.get("bug_orbit_radius", 1.2))
-    # Sub-frames between each agent step for smooth bug flight.
-    # Only used when there are bugs; otherwise keep 1 to avoid bloating frames.
-    bug_sub_frames = int(render_cfg.get("bug_sub_frames", 4)) if bug_cfg else 1
+
+    # --- scripted bugs ---
+    scripted_bugs: list[ScriptedBug] = [
+        ScriptedBug(cfg) for cfg in render_cfg.get("scripted_bugs", [])
+    ]
+
+    has_any_bugs = bool(bug_cfg) or bool(scripted_bugs)
+    bug_sub_frames = int(render_cfg.get("bug_sub_frames", 4)) if has_any_bugs else 1
+
     bush_positions = [
         (int(bush["pos"][0]), int(bush["pos"][1]))
         for bush in scenario.get("bushes", [])
@@ -427,15 +580,53 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
 
     env.reset()
     frames = []
-    bug_time = 0.0          # continuous bug tick (advances by 1.0 per agent step)
-    bug_dt = 1.0 / bug_sub_frames  # how much bug_time advances per sub-frame
+    bug_time = 0.0
+    bug_dt = 1.0 / bug_sub_frames
+    agent_step_count = 0
+
+    trajectory: list[dict] = []
+    trajectory.append({"pos": tuple(env.agent_pos), "age": 0, "dir": env.agent_dir})
 
     def _render_frame(bt: float) -> np.ndarray:
         frame = env.render()
+
+        for t in trajectory:
+            t["age"] += 1 / bug_sub_frames
+
+        MAX_AGE = 15
+        trajectory[:] = [t for t in trajectory if t["age"] < MAX_AGE]
+
+
+        # draw trajectory triangles
+        for t in trajectory:
+
+            x, y = t["pos"]
+            direction = t["dir"]
+
+            cx = x * tile_size + tile_size // 2
+            cy = y * tile_size + tile_size // 2
+
+            fade = 1 - t["age"] / MAX_AGE
+            fade = max(0, fade)
+
+            _draw_triangle_alpha(
+                frame,
+                cx,
+                cy,
+                4,
+                direction,
+                fade
+            )
+
+        # Orbital bugs
         for idx, center in enumerate(bug_centers):
             phase_offset = bug_phase[idx] / ORBIT_POSITIONS
             orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
             px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
+            _overlay_bug_at_pixel(frame, px, py)
+        # Scripted bugs
+        for sb in scripted_bugs:
+            px, py = sb.pixel_pos(tile_size)
             _overlay_bug_at_pixel(frame, px, py)
         if dim_outside_view:
             visible_cells = _get_highlighted_cells(env)
@@ -444,6 +635,18 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         if show_bush_labels:
             _overlay_bush_labels(frame, bush_positions, tile_size, label_position)
         return frame
+
+    def _advance_scripted_bugs():
+        for sb in scripted_bugs:
+            sb.advance(env)
+
+    def _notify_event(event: str):
+        for sb in scripted_bugs:
+            sb.notify_event(event)
+
+    def _notify_step():
+        for sb in scripted_bugs:
+            sb.notify_step(agent_step_count)
 
     if enable_discovery:
         _check_berry_discovery(env)
@@ -457,6 +660,7 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
             hold_count = max(0, int(round(amount * fps)))
             for _ in range(hold_count * bug_sub_frames):
                 bug_time += bug_dt
+                _advance_scripted_bugs()
                 frames.append(_render_frame(bug_time))
             continue
 
@@ -464,8 +668,10 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
             _eat_berry(env)
             if enable_discovery:
                 _check_berry_discovery(env)
+            _notify_event("after_eat")
             for _ in range(bug_sub_frames):
                 bug_time += bug_dt
+                _advance_scripted_bugs()
                 frames.append(_render_frame(bug_time))
             continue
 
@@ -473,22 +679,42 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
             _eat_berry(env, "orange")
             if enable_discovery:
                 _check_berry_discovery(env)
+            _notify_event("after_eat_orange")
             for _ in range(bug_sub_frames):
                 bug_time += bug_dt
+                _advance_scripted_bugs()
+                frames.append(_render_frame(bug_time))
+            continue
+
+        if action in {"EAT_RED", "CONSUME_RED"}:
+            _eat_berry(env, "red")
+            if enable_discovery:
+                _check_berry_discovery(env)
+            _notify_event("after_eat_red")
+            for _ in range(bug_sub_frames):
+                bug_time += bug_dt
+                _advance_scripted_bugs()
                 frames.append(_render_frame(bug_time))
             continue
 
         for _ in range(max(0, amount)):
             _apply_action(env, action)
+            trajectory.append({
+                "pos": tuple(env.agent_pos),
+                "age": 0,
+                "dir": env.agent_dir
+            })
             if consume_types:
                 _consume_on_step(env, consume_types)
             if enable_discovery:
                 _check_berry_discovery(env)
+            agent_step_count += 1
+            _notify_step()
             for _ in range(bug_sub_frames):
                 bug_time += bug_dt
+                _advance_scripted_bugs()
                 frames.append(_render_frame(bug_time))
 
     env.close()
-    # Scale fps by sub-frames so overall animation speed is preserved.
     imageio.mimsave(output_path, frames, fps=fps * bug_sub_frames, loop=0)
     return output_path

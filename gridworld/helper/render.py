@@ -470,7 +470,10 @@ class ScriptedBug:
         self.start: tuple[int, int] = tuple(cfg["start"])
         self.path: list[tuple[int, int]] = [tuple(p) for p in cfg.get("path", [])]
         self.trigger: str = cfg.get("trigger", "after_eat_orange")
+        self.trigger_cell = tuple(cfg["trigger_cell"]) if "trigger_cell" in cfg else None
         self.eat_at_end: bool = bool(cfg.get("eat_at_end", True))
+        
+
         # eat_target: explicit cell to consume; falls back to path[-1] if omitted
         raw_target = cfg.get("eat_target", None)
         self.eat_target: tuple[int, int] | None = tuple(raw_target) if raw_target is not None else None
@@ -735,6 +738,12 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
 
         for _ in range(max(0, amount)):
             _apply_action(env, action)
+
+            # trigger bug when agent reaches specific bush
+            for sb in scripted_bugs:
+                if not sb.triggered and sb.trigger == "reach_cell":
+                    if tuple(env.agent_pos) == sb.trigger_cell:
+                        sb.triggered = True
             trajectory.append({
                 "pos": tuple(env.agent_pos),
                 "age": 0,

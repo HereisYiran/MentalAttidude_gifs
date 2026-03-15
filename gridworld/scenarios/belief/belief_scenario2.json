@@ -24,7 +24,7 @@
       "pos": [2, 8]
     },
     {
-      "type": "blue",
+      "type": "empty",
       "pos": [10, 8]
     }
   ],
@@ -33,7 +33,6 @@
     ["D", 5],
     ["L", 3],
     ["R", 6],
-    ["EAT_BERRY", 1],
     ["L", 2]
   ],
 
@@ -52,7 +51,8 @@
           [2, 6], [2, 7], [2, 7.5]
         ],
         "eat_target": [2, 8],
-        "trigger": "after_eat",
+        "trigger": "reach_cell",
+        "trigger_cell": [9, 8],
         "eat_at_end": true,
         "steps_per_cell": 2,
         "eat_pause_frames": 3

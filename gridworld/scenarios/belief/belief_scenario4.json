@@ -2,8 +2,8 @@
   "name": "belief_scenario4",
   "category": "belief",
   "grid": {
-    "width": 13,
-    "height": 16,
+    "width": 12,
+    "height": 13,
     "agent_start_pos": [1, 2],
     "agent_start_dir": 0,
     "max_steps": 100,
@@ -14,39 +14,28 @@
     "segments": [
       {
         "row": 5,
-        "cols": [1, 2, 3, 4, 11]
+        "cols": [1, 2, 3, 4]
       },
       {
         "row": 10,
-        "cols": [1, 2, 10, 11]
+        "cols": [1, 2]
       }
     ]
   },
   "bushes": [
     {
-      "type": "empty",
-      "pos": [11, 3]
-    },
-    {
       "type": "orange",
-      "pos": [11, 6]
+      "pos": [8, 2]
     },
     {
       "type": "empty",
-      "pos": [5, 8]
-    },
-    {
-      "type": "empty",
-      "pos": [5, 13]
-    },
-    {
-      "type": "empty",
-      "pos": [7, 13]
+      "pos": [7, 9]
     }
   ],
   "actions": [
-    ["R", 5],
-    ["D", 8]
+    ["R", 6],
+    ["D", 5],
+    ["U", 2]
   ],
   "render": {
     "fps": 1.3,
@@ -57,19 +46,19 @@
     "label_position": "bottom_right",
     "bugs": [
       {
-        "center": [5, 8],
+        "center": [7, 9],
         "phase": 0
       },
       {
-        "center": [5, 8],
+        "center": [7, 9],
         "phase": 2
       },
       {
-        "center": [5, 8],
+        "center": [7, 9],
         "phase": 4
       },
       {
-        "center": [5, 8],
+        "center": [7, 9],
         "phase": 6
       }
     ]

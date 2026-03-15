@@ -24,8 +24,8 @@
   },
   "bushes": [
     {
-      "type": "orange",
-      "pos": [7, 10]
+      "type": "empty",
+      "pos": [8, 10]
     },
     {
       "type": "red",
@@ -37,15 +37,13 @@
     }
   ],
   "actions": [
-    ["R", 5],
-    ["EAT_BERRY", 1],
+    ["R", 6],
+    ["WAIT", 5],
     ["U", 4],
-    ["L", 4],
+    ["L", 5],
     ["U", 4],
     ["R", 3],
-    ["L", 1],
-    ["D", 4],
-    ["R", 1]
+    ["L", 1]
   ],
 
 
@@ -54,6 +52,25 @@
     "tile_size": 48,
     "enable_discovery": true,
     "dim_outside_view": true,
-    "outside_view_brightness": 0.8
+    "outside_view_brightness": 0.8,
+    "eat_bugs_on_bump": true,
+        "bugs": [
+      {
+        "center": [8, 10],
+        "phase": 0
+      },
+      {
+        "center": [8, 10],
+        "phase": 2
+      },
+      {
+        "center": [8, 10],
+        "phase": 4
+      },
+      {
+        "center": [8, 10],
+        "phase": 6
+      }
+    ]
   }
 }

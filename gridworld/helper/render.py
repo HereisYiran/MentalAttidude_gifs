@@ -431,6 +431,19 @@ def _eat_berry(env: MiniGridEnv, berry_type: str | None = None):
         if _consume_if_match(vx, vy):
             return
 
+def _eat_bug(env: MiniGridEnv, active_bugs: list[tuple[int,int]]):
+
+    x, y = int(env.agent_pos[0]), int(env.agent_pos[1])
+
+    # eat bug in same cell
+    if (x,y) in active_bugs:
+        active_bugs.remove((x,y))
+        return
+
+    # eat bug in front
+    fx, fy = int(env.front_pos[0]), int(env.front_pos[1])
+    if (fx,fy) in active_bugs:
+        active_bugs.remove((fx,fy))
 
 # ---------------------------------------------------------------------------
 # Scripted bug: follows a waypoint path, triggered by game events
@@ -548,6 +561,7 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     consume_types = [str(t) for t in render_cfg.get("consume_on_step", [])]
     dim_outside_view = bool(render_cfg.get("dim_outside_view", False))
     outside_view_brightness = float(render_cfg.get("outside_view_brightness", 0.28))
+    eat_bugs_on_bump = bool(render_cfg.get("eat_bugs_on_bump", False))
 
     category = scenario["category"]
     output_dir = output_root / category
@@ -563,6 +577,7 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     bug_cfg = render_cfg.get("bugs", [])
     bug_phase = [int(b.get("phase", 0)) for b in bug_cfg]
     bug_centers = [(int(b["center"][0]), int(b["center"][1])) for b in bug_cfg]
+    active_bugs = bug_centers.copy()
     bug_orbit_radius = float(render_cfg.get("bug_orbit_radius", 1.2))
 
     # --- scripted bugs ---
@@ -619,11 +634,32 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
             )
 
         # Orbital bugs
-        for idx, center in enumerate(bug_centers):
+
+        agent_px = env.agent_pos[0] * tile_size + tile_size // 2
+        agent_py = env.agent_pos[1] * tile_size + tile_size // 2
+
+        remaining_bugs = []
+        remaining_phases = []
+
+        for idx, center in enumerate(active_bugs):
             phase_offset = bug_phase[idx] / ORBIT_POSITIONS
             orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
+
             px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
+
+            # bug gets eaten when it bumps into the agent
+            dist = math.hypot(px - agent_px, py - agent_py)
+
+            if eat_bugs_on_bump and dist < tile_size * 0.35:
+                continue
+
+            remaining_bugs.append(center)
+            remaining_phases.append(bug_phase[idx])
             _overlay_bug_at_pixel(frame, px, py)
+
+        active_bugs[:] = remaining_bugs
+        bug_phase[:] = remaining_phases
+
         # Scripted bugs
         for sb in scripted_bugs:
             px, py = sb.pixel_pos(tile_size)

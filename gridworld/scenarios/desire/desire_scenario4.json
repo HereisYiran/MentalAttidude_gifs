@@ -28,21 +28,20 @@
       "pos": [1, 2]
     },
     {
-      "type": "orange",
-      "pos": [1, 7]
+      "type": "empty",
+      "pos": [2, 6]
     },
     {
-      "type": "empty",
+      "type": "blue",
       "pos": [6, 10]
     }
   ],
   "actions": [
     ["L", 7],
-    ["D", 4],
-    ["R", 4],
     ["D", 3],
-    ["U", 3],
-    ["L", 2],
+    ["WAIT", 5],
+    ["R", 4],
+    ["D", 4],
     ["U", 1]
   ],
 
@@ -52,6 +51,26 @@
     "tile_size": 48,
     "enable_discovery": true,
     "dim_outside_view": true,
-    "outside_view_brightness": 0.8
+    "outside_view_brightness": 0.8,
+    "label_position": "bottom_right",
+    "eat_bugs_on_bump": true,
+    "bugs": [
+      {
+        "center": [2, 6],
+        "phase": 0
+      },
+      {
+        "center": [2, 6],
+        "phase": 2
+      },
+      {
+        "center": [2, 6],
+        "phase": 4
+      },
+      {
+        "center": [2, 6],
+        "phase": 6
+      }
+    ]
   }
 }

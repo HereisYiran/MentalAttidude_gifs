@@ -565,6 +565,7 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     dim_outside_view = bool(render_cfg.get("dim_outside_view", False))
     outside_view_brightness = float(render_cfg.get("outside_view_brightness", 0.28))
     eat_bugs_on_bump = bool(render_cfg.get("eat_bugs_on_bump", False))
+    has_outer_wall = bool(scenario.get("walls", {}).get("outer", True))
 
     category = scenario["category"]
     output_dir = output_root / category
@@ -673,6 +674,14 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
             _dim_outside_view(frame, visible_cells, tile_size, outside_view_brightness)
         if show_bush_labels:
             _overlay_bush_labels(frame, bush_positions, tile_size, label_position)
+        if has_outer_wall:
+            frame = frame[tile_size:-tile_size, tile_size:-tile_size]
+            b = 2
+            border_color = np.array([55, 95, 32], dtype=np.uint8)
+            h, w = frame.shape[:2]
+            padded = np.full((h + 2 * b, w + 2 * b, 3), border_color, dtype=np.uint8)
+            padded[b:b + h, b:b + w] = frame
+            frame = padded
         return frame
 
     def _advance_scripted_bugs():

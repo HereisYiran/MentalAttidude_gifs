@@ -280,8 +280,10 @@ def _overlay_bug(img: np.ndarray, cell: tuple[int, int], tile_size: int):
     _overlay_bug_at_pixel(img, cx, cy)
 
 
-def _overlay_bug_at_pixel(img: np.ndarray, px: int, py: int):
-    """Draw a more intuitive bug sprite."""
+def _overlay_bug_at_pixel(img: np.ndarray, px: int, py: int, scale: float = 1.0):
+    """Draw a more intuitive bug sprite. scale in (0, 1] shrinks the sprite."""
+    if scale <= 0:
+        return
 
     BODY = (40, 40, 40)
     SHELL = (200, 50, 50)
@@ -289,23 +291,17 @@ def _overlay_bug_at_pixel(img: np.ndarray, px: int, py: int):
     LEG = (30, 30, 30)
     HIGHLIGHT = (240, 120, 120)
 
-    # body
-    _draw_dot(img, px, py, 5, BODY)
+    def r(base: int) -> int: return max(1, int(round(base * scale)))
+    def o(base: int) -> int: return int(round(base * scale))
 
-    # shell
-    _draw_dot(img, px, py, 4, SHELL)
-
-    # head
-    _draw_dot(img, px, py - 6, 2, HEAD)
-
-    # legs
-    _draw_dot(img, px - 6, py + 1, 1, LEG)
-    _draw_dot(img, px + 6, py + 1, 1, LEG)
-    _draw_dot(img, px - 6, py - 2, 1, LEG)
-    _draw_dot(img, px + 6, py - 2, 1, LEG)
-
-    # highlight
-    _draw_dot(img, px - 2, py - 1, 1, HIGHLIGHT)
+    _draw_dot(img, px, py, r(5), BODY)
+    _draw_dot(img, px, py, r(4), SHELL)
+    _draw_dot(img, px, py - o(6), r(2), HEAD)
+    _draw_dot(img, px - o(6), py + o(1), r(1), LEG)
+    _draw_dot(img, px + o(6), py + o(1), r(1), LEG)
+    _draw_dot(img, px - o(6), py - o(2), r(1), LEG)
+    _draw_dot(img, px + o(6), py - o(2), r(1), LEG)
+    _draw_dot(img, px - o(2), py - o(1), r(1), HIGHLIGHT)
 
 
 _LABEL_FONT = None
@@ -606,6 +602,10 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     trajectory: list[dict] = []
     trajectory.append({"pos": tuple(env.agent_pos), "age": 0, "dir": env.agent_dir})
 
+    # State for the slow bug-vanish animation
+    dying_bugs: list[tuple[int, int]] = []
+    dying_bug_frame = [0]
+
     def _render_frame(bt: float) -> np.ndarray:
         frame = env.render()
 
@@ -645,24 +645,51 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         remaining_bugs = []
         remaining_phases = []
 
-        for idx, center in enumerate(active_bugs):
-            phase_offset = bug_phase[idx] / ORBIT_POSITIONS
-            orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
+        # When eat_bugs_on_bump is on, check if any bug is close enough to
+        # trigger eating.  If so, eat ALL bugs simultaneously ("suck in" effect)
+        # rather than one at a time as they orbit into range.
+        mass_eat = False
+        if eat_bugs_on_bump and active_bugs and not dying_bugs:
+            for idx, center in enumerate(active_bugs):
+                phase_offset = bug_phase[idx] / ORBIT_POSITIONS
+                orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
+                px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
+                if math.hypot(px - agent_px, py - agent_py) < tile_size * 0.35:
+                    mass_eat = True
+                    break
 
-            px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
-
-            # bug gets eaten when it bumps into the agent
-            dist = math.hypot(px - agent_px, py - agent_py)
-
-            if eat_bugs_on_bump and dist < tile_size * 0.35:
-                continue
-
-            remaining_bugs.append(center)
-            remaining_phases.append(bug_phase[idx])
-            _overlay_bug_at_pixel(frame, px, py)
+        if mass_eat:
+            # Capture pixel positions for the shrink animation; clear active list
+            for idx, center in enumerate(active_bugs):
+                phase_offset = bug_phase[idx] / ORBIT_POSITIONS
+                orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
+                px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
+                dying_bugs.append((px, py))
+            dying_bug_frame[0] = 0
+            # remaining_bugs stays empty — bugs removed from active list
+        else:
+            for idx, center in enumerate(active_bugs):
+                phase_offset = bug_phase[idx] / ORBIT_POSITIONS
+                orbit_frac = (bt / ORBIT_POSITIONS + phase_offset) % 1.0
+                px, py = _smooth_bug_pixel_pos(center, orbit_frac, tile_size, bug_orbit_radius)
+                remaining_bugs.append(center)
+                remaining_phases.append(bug_phase[idx])
+                _overlay_bug_at_pixel(frame, px, py)
 
         active_bugs[:] = remaining_bugs
         bug_phase[:] = remaining_phases
+
+        # Dying animation: draw bugs at shrinking scale starting on the mass-eat
+        # frame, matching the per-frame duration of a berry-eat pause.
+        if dying_bugs:
+            scale = max(0.0, 1.0 - (dying_bug_frame[0] + 1) / bug_sub_frames)
+            if scale > 0.0:
+                for dpx, dpy in dying_bugs:
+                    _overlay_bug_at_pixel(frame, dpx, dpy, scale)
+            dying_bug_frame[0] += 1
+            if dying_bug_frame[0] >= bug_sub_frames:
+                dying_bugs.clear()
+                dying_bug_frame[0] = 0
 
         # Scripted bugs
         for sb in scripted_bugs:
@@ -707,9 +734,16 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         if action in {"WAIT", "PAUSE"}:
             hold_count = max(0, int(round(amount * fps)))
             for _ in range(hold_count * bug_sub_frames):
+                bugs_before = len(active_bugs)
                 bug_time += bug_dt
                 _advance_scripted_bugs()
                 frames.append(_render_frame(bug_time))
+                if len(active_bugs) < bugs_before:
+                    # mass eat fired: add same pause as EAT_BERRY
+                    for _ in range(bug_sub_frames):
+                        bug_time += bug_dt
+                        _advance_scripted_bugs()
+                        frames.append(_render_frame(bug_time))
             continue
 
         if action in {"EAT_BERRY", "CONSUME_BERRY", "EAT", "DISAPPEAR_BERRY"}:
@@ -764,10 +798,17 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
                 _check_berry_discovery(env)
             agent_step_count += 1
             _notify_step()
+            bugs_before = len(active_bugs)
             for _ in range(bug_sub_frames):
                 bug_time += bug_dt
                 _advance_scripted_bugs()
                 frames.append(_render_frame(bug_time))
+            if len(active_bugs) < bugs_before:
+                # mass eat fired: add same pause as EAT_BERRY
+                for _ in range(bug_sub_frames):
+                    bug_time += bug_dt
+                    _advance_scripted_bugs()
+                    frames.append(_render_frame(bug_time))
 
     env.close()
     imageio.mimsave(output_path, frames, fps=fps * bug_sub_frames, loop=0)

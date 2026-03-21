@@ -38,7 +38,6 @@
   ],
   "actions": [
     ["R", 6],
-    ["WAIT", 5],
     ["U", 4],
     ["L", 5],
     ["U", 4],
@@ -54,7 +53,7 @@
     "dim_outside_view": true,
     "outside_view_brightness": 0.8,
     "eat_bugs_on_bump": true,
-        "bugs": [
+    "bugs": [
       {
         "center": [8, 10],
         "phase": 0

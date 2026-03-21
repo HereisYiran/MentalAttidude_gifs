@@ -679,13 +679,16 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
         active_bugs[:] = remaining_bugs
         bug_phase[:] = remaining_phases
 
-        # Dying animation: draw bugs at shrinking scale starting on the mass-eat
-        # frame, matching the per-frame duration of a berry-eat pause.
+        # Dying animation: each bug flies toward the agent while shrinking,
+        # so they appear to be sucked in.  Starts on the mass-eat frame.
         if dying_bugs:
-            scale = max(0.0, 1.0 - (dying_bug_frame[0] + 1) / bug_sub_frames)
+            t = (dying_bug_frame[0] + 1) / bug_sub_frames  # 0→1 over pause
+            scale = max(0.0, 1.0 - t)
             if scale > 0.0:
                 for dpx, dpy in dying_bugs:
-                    _overlay_bug_at_pixel(frame, dpx, dpy, scale)
+                    draw_x = int(round(dpx + (agent_px - dpx) * t))
+                    draw_y = int(round(dpy + (agent_py - dpy) * t))
+                    _overlay_bug_at_pixel(frame, draw_x, draw_y, scale)
             dying_bug_frame[0] += 1
             if dying_bug_frame[0] >= bug_sub_frames:
                 dying_bugs.clear()

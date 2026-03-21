@@ -1,6 +1,6 @@
 {
-  "name": "belief_scenario2",
-  "category": "belief",
+  "name": "false_belief_2",
+  "category": "belief/false_belief_scenarios",
   "grid": {
     "width": 13,
     "height": 11,

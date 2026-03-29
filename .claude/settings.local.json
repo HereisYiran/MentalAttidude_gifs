@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python gridworld/simulator.py --help)"
+      "Bash(python gridworld/simulator.py --help)",
+      "Bash(for f:*)",
+      "Bash(do python3:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(python gridworld/simulator.py --category hope --scenario hope_scenario2)",
+      "Bash(python gridworld/simulator.py --category desire --scenario desire_scenario3)"
     ]
   }
 }

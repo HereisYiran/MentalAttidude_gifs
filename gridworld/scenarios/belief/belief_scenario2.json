@@ -9,15 +9,12 @@
     "max_steps": 100,
     "agent_view_size": 3
   },
-  "walls": {
-    "outer": true,
-    "segments": [
-      {
-        "row": 4,
-        "cols": [6, 7, 8, 9]
-      }
-    ]
-  },
+  "walls": [
+    {
+      "row": 4,
+      "cols": [6, 7, 8, 9]
+    }
+  ],
   "bushes": [
     {
       "type": "empty",

@@ -9,19 +9,16 @@
     "max_steps": 100,
     "agent_view_size": 3
   },
-  "walls": {
-    "outer": true,
-    "segments": [
-      {
-        "row": 4,
-        "cols": [6, 7, 8, 9]
-      },
-      {
-        "row": 8,
-        "cols": [1, 2, 3, 4]
-      }
-    ]
-  },
+  "walls": [
+    {
+      "row": 4,
+      "cols": [6, 7, 8, 9]
+    },
+    {
+      "row": 8,
+      "cols": [1, 2, 3, 4]
+    }
+  ],
   "bushes": [
     {
       "type": "blue",
@@ -42,8 +39,6 @@
     ["R", 4],
     ["D", 4]
   ],
-
-
   "render": {
     "fps": 1.3,
     "tile_size": 48,

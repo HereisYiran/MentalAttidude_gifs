@@ -9,19 +9,16 @@
     "max_steps": 100,
     "agent_view_size": 3
   },
-  "walls": {
-    "outer": true,
-    "segments": [
-      {
-        "row": 5,
-        "cols": [1, 2, 3, 4]
-      },
-      {
-        "row": 9,
-        "cols": [1, 2]
-      }
-    ]
-  },
+  "walls": [
+    {
+      "row": 5,
+      "cols": [1, 2, 3, 4]
+    },
+    {
+      "row": 9,
+      "cols": [1, 2]
+    }
+  ],
   "bushes": [
     {
       "type": "orange",

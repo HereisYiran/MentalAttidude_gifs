@@ -21,7 +21,6 @@ from minigrid.core.grid import Grid
 from minigrid.core.mission import MissionSpace
 from minigrid.core.world_object import Floor
 from minigrid.minigrid_env import MiniGridEnv
-from minigrid.core.world_object import Floor
 from minigrid.utils.rendering import fill_coords, point_in_rect
 
 class WarmGrassFloor(Floor):
@@ -100,16 +99,14 @@ class JsonScenarioEnv(MiniGridEnv):
     def _gen_grid(self, width: int, height: int):
         self.grid = Grid(width, height)
 
-        walls_cfg = self._scenario.get("walls", {})
-        if walls_cfg.get("outer", True):
-            for x in range(width):
-                self.grid.set(x, 0, OuterWall())
-                self.grid.set(x, height - 1, OuterWall())
-            for y in range(height):
-                self.grid.set(0, y, OuterWall())
-                self.grid.set(width - 1, y, OuterWall())
+        for x in range(width):
+            self.grid.set(x, 0, OuterWall())
+            self.grid.set(x, height - 1, OuterWall())
+        for y in range(height):
+            self.grid.set(0, y, OuterWall())
+            self.grid.set(width - 1, y, OuterWall())
 
-        for seg in walls_cfg.get("segments", []):
+        for seg in self._scenario.get("walls", []):
             row = int(seg["row"])
             for col in seg["cols"]:
                 self.grid.set(int(col), row, InnerWall())
@@ -183,21 +180,6 @@ def _check_berry_discovery(env: MiniGridEnv):
         obj = env.grid.get(x, y)
         if isinstance(obj, Bush) and obj.berry_color is not None and not obj.discovered:
             obj.discovered = True
-
-
-# Legacy 8-cell orbit (kept for reference)
-def _clockwise_orbit(center: tuple[int, int]) -> list[tuple[int, int]]:
-    cx, cy = center
-    return [
-        (cx, cy - 1),
-        (cx + 1, cy - 1),
-        (cx + 1, cy),
-        (cx + 1, cy + 1),
-        (cx, cy + 1),
-        (cx - 1, cy + 1),
-        (cx - 1, cy),
-        (cx - 1, cy - 1),
-    ]
 
 
 ORBIT_POSITIONS = 8  # number of discrete positions in the original orbit
@@ -427,20 +409,6 @@ def _eat_berry(env: MiniGridEnv, berry_type: str | None = None):
         if _consume_if_match(vx, vy):
             return
 
-def _eat_bug(env: MiniGridEnv, active_bugs: list[tuple[int,int]]):
-
-    x, y = int(env.agent_pos[0]), int(env.agent_pos[1])
-
-    # eat bug in same cell
-    if (x,y) in active_bugs:
-        active_bugs.remove((x,y))
-        return
-
-    # eat bug in front
-    fx, fy = int(env.front_pos[0]), int(env.front_pos[1])
-    if (fx,fy) in active_bugs:
-        active_bugs.remove((fx,fy))
-
 # ---------------------------------------------------------------------------
 # Scripted bug: follows a waypoint path, triggered by game events
 # ---------------------------------------------------------------------------
@@ -561,7 +529,7 @@ def render_scenario(scenario_path: Path, output_root: Path) -> Path:
     dim_outside_view = bool(render_cfg.get("dim_outside_view", False))
     outside_view_brightness = float(render_cfg.get("outside_view_brightness", 0.28))
     eat_bugs_on_bump = bool(render_cfg.get("eat_bugs_on_bump", False))
-    has_outer_wall = bool(scenario.get("walls", {}).get("outer", True))
+    has_outer_wall = True
 
     category = scenario["category"]
     output_dir = output_root / category

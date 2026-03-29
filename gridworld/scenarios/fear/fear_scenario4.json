@@ -9,23 +9,19 @@
     "max_steps": 100,
     "agent_view_size": 3
   },
-  "walls": {
-    "outer": true,
-    "segments": [
-      {
-        "row": 4,
-        "cols": [7, 8, 9, 10, 11, 12, 13]
-      },
-      {
-        "row": 8,
-        "cols": [1, 2, 3, 4, 5, 12, 13]
-      },
-      {
-        "row": 9,
-        "cols": [12, 13]
-      }
-    ]
-  },
+  "walls": [
+    {"row": 4,
+      "cols": [7, 8, 9, 10, 11, 12, 13]
+    },
+    {
+      "row": 8,
+      "cols": [1, 2, 3, 4, 5, 12, 13]
+    },
+    {
+      "row": 9,
+      "cols": [12, 13]
+    }
+  ],
   "bushes": [
     {
       "type": "empty",
@@ -70,7 +66,6 @@
         "center": [3, 2],
         "phase": 6
       }
-    ],
-    "consume_on_step": []
+    ]
   }
 }

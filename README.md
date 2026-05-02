@@ -1,14 +1,18 @@
-## 🍄 Welcome to the "Super Forager" Gridworld!
+You will be watching a forager moving around in a field where several bushes are scattered around.
 
-You are observing a **lone forager** in a lush forest of the unknown.
-The forest contains several **bushes**. Each bush may contain berries, bugs, or nothing at all.
+The bushes may contain red berries, blue berries, orange berries, bugs, or nothing at all. Both berries and bugs are edible.
 
-Some bushes are rewarding; some are not. The forager carries a rough **map** that marks
-where the bushes are — but not what's inside them.
+WHAT THE FORAGER IS LOOKING FOR
+- Berries or bugs to eat.
+- The forager may like or dislike berries and bugs, depending on the scenarios.
 
-To find out, the forager must walk closer. **Step by step. Tile by tile.**
+WHERE THE FORAGER CAN MOVE
+- The forager can move on any green square.
+- The forager cannot step onto grey rocks.
 
-The forager can only see what falls within its **small ring of light** —
-everything beyond that is hidden until it steps closer.
+WHAT THE FORAGER KNOWS
+- The forager knows where the bushes and rocks are located (because they have been in this field before).
+- The forager does not know what's in the bush, unless they move closer to it.
 
-> 🌿 *As you watch, ask yourself — what do you think the forager is doing right now?*
+WHAT THE FORAGER CAN SEE
+- The forager can only see what is inside a bush if it falls within the 6 highlighted squares surrounding them.

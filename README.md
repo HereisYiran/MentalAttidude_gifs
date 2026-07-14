@@ -16,3 +16,5 @@ WHAT THE FORAGER KNOWS
 
 WHAT THE FORAGER CAN SEE
 - The forager can only see what is inside a bush if it falls within the 6 highlighted squares surrounding them.
+
+(latest update see MentalVocab/simulator)

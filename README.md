@@ -1,4 +1,4 @@
-You will be watching a forager moving around in a field where several bushes are scattered around.
+This is a simulator that generates animated scenarios of a forager moving around a field. There are bushes scattered around the environment.
 
 The bushes may contain red berries, blue berries, orange berries, bugs, or nothing at all. Both berries and bugs are edible.
 

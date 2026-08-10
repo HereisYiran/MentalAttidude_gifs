@@ -10,7 +10,7 @@ WHERE THE FORAGER CAN MOVE
 - The forager can move on any green square.
 - The forager cannot step onto grey rocks.
 
-WHAT THE FORAGER KNOWS
+WHAT THE FORAGER KNOWS 
 - The forager knows where the bushes and rocks are located (because they have been in this field before).
 - The forager does not know what's in the bush, unless they move closer to it.
 
